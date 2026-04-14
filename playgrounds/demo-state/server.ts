@@ -1,5 +1,5 @@
-import { scanApiRoutesFromManifest, scanPageRoutesFromManifest } from "@lito/app";
-import { startLitoNodeApp } from "@lito/server";
+import { scanApiRoutesFromManifest, scanPageRoutesFromManifest } from "@litoho/app";
+import { startLitoNodeApp } from "@litoho/server";
 import { resolve } from "node:path";
 import { apiModulePaths } from "./src/generated/api-manifest";
 import { pageManifest } from "./src/generated/page-manifest";
@@ -15,7 +15,7 @@ const apiRoutes = await scanApiRoutesFromManifest({
 });
 
 await startLitoNodeApp({
-  appName: "Lito Demo State",
+  appName: "Litoho Demo State",
   rootDir: resolve(process.cwd()),
   mode: process.env.NODE_ENV === "production" ? "production" : "development",
   port: Number(process.env.PORT ?? 3000),
@@ -23,4 +23,4 @@ await startLitoNodeApp({
   apiRoutes
 });
 
-console.log(`Lito demo-state is running at http://localhost:${process.env.PORT ?? 3000}`);
+console.log(`Litoho demo-state is running at http://localhost:${process.env.PORT ?? 3000}`);

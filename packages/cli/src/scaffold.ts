@@ -1,13 +1,13 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
-const LITO_VERSION = "^0.0.1";
-const LITO_SCOPE = process.env.LITO_SCOPE?.trim() || "@lito";
-const LITO_CLI_PACKAGE = process.env.LITO_CLI_PACKAGE?.trim() || "lito";
-const LITO_CLI_BIN = process.env.LITO_CLI_BIN?.trim() || "lito";
+const LITOHO_VERSION = "^0.0.1";
+const LITOHO_SCOPE = process.env.LITOHO_SCOPE?.trim() || "@litoho";
+const LITOHO_CLI_PACKAGE = process.env.LITOHO_CLI_PACKAGE?.trim() || "litoho";
+const LITOHO_CLI_BIN = process.env.LITOHO_CLI_BIN?.trim() || "litoho";
 
 function scopedPackage(name: string) {
-  return `${LITO_SCOPE}/${name}`;
+  return `${LITOHO_SCOPE}/${name}`;
 }
 
 const APP_PACKAGE = scopedPackage("app");
@@ -91,7 +91,7 @@ export default layout;
 }
 
 export function createNewApp(rootDir: string) {
-  const appName = rootDir.split(/[/\\]/).pop() ?? "lito-app";
+  const appName = rootDir.split(/[/\\]/).pop() ?? "litoho-app";
   mkdirSync(resolve(rootDir, "app/pages"), { recursive: true });
   mkdirSync(resolve(rootDir, "app/api"), { recursive: true });
   mkdirSync(resolve(rootDir, "src/generated"), { recursive: true });
@@ -108,19 +108,19 @@ export function createNewApp(rootDir: string) {
           private: true,
           type: "module",
           scripts: {
-            "generate:routes": `pnpm exec ${LITO_CLI_BIN} generate routes --root .`,
-            dev: `pnpm exec ${LITO_CLI_BIN} dev --root .`,
-            build: `pnpm exec ${LITO_CLI_BIN} build --root .`,
-            start: `pnpm exec ${LITO_CLI_BIN} start --root .`
+            "generate:routes": `pnpm exec ${LITOHO_CLI_BIN} generate routes --root .`,
+            dev: `pnpm exec ${LITOHO_CLI_BIN} dev --root .`,
+            build: `pnpm exec ${LITOHO_CLI_BIN} build --root .`,
+            start: `pnpm exec ${LITOHO_CLI_BIN} start --root .`
           },
           dependencies: {
-            [scopedPackage("app")]: LITO_VERSION,
-            [scopedPackage("core")]: LITO_VERSION,
-            [scopedPackage("server")]: LITO_VERSION,
+            [scopedPackage("app")]: LITOHO_VERSION,
+            [scopedPackage("core")]: LITOHO_VERSION,
+            [scopedPackage("server")]: LITOHO_VERSION,
             "lit": "^3.2.0"
           },
           devDependencies: {
-            [LITO_CLI_PACKAGE]: LITO_VERSION,
+            [LITOHO_CLI_PACKAGE]: LITOHO_VERSION,
             "tsx": "^4.19.2",
             "typescript": "^5.8.3",
             "vite": "^5.4.19"
@@ -168,7 +168,7 @@ export default defineConfig({
   appType: "custom",
   plugins: [
     {
-      name: "lito-strip-route-directives",
+      name: "litoho-strip-route-directives",
       enforce: "pre",
       transform(code, id) {
         if (!id.includes("/app/pages/")) {
@@ -182,11 +182,11 @@ export default defineConfig({
       }
     },
     {
-      name: "lito-protect-api",
+      name: "litoho-protect-api",
       enforce: "pre",
       resolveId(id, importer, options) {
         if (!options?.ssr && (id.includes("/app/api/") || id.endsWith("/app/api"))) {
-          throw new Error(\`\\n\\n[LITO] Protection Error:\\nCannot import backend API route '\${id}' in a Client context!\\n(Imported by \${importer})\\n\\n\`);
+          throw new Error(\`\\n\\n[LITOHO] Protection Error:\\nCannot import backend API route '\${id}' in a Client context!\\n(Imported by \${importer})\\n\\n\`);
         }
       }
     }
@@ -208,7 +208,7 @@ export default defineConfig({
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Lito App</title>
+    <title>Litoho App</title>
   </head>
   <body>
     <div id="app"></div>
@@ -248,7 +248,7 @@ const apiRoutes = await scanApiRoutesFromManifest({
 });
 
 await startLitoNodeApp({
-  appName: "Lito App",
+  appName: "Litoho App",
   rootDir: resolve(process.cwd()),
   mode: process.env.NODE_ENV === "production" ? "production" : "development",
   port: Number(process.env.PORT ?? 3000),
@@ -256,7 +256,7 @@ await startLitoNodeApp({
   apiRoutes
 });
 
-console.log(\`Lito app is running at http://localhost:\${process.env.PORT ?? 3000}\`);
+console.log(\`Litoho app is running at http://localhost:\${process.env.PORT ?? 3000}\`);
 `
     );
   }
@@ -270,11 +270,11 @@ import type { LitoPageModule } from "${APP_PACKAGE}";
 
 const page: LitoPageModule = {
   document: {
-    title: "Welcome to Lito"
+    title: "Welcome to Litoho"
   },
   render: () => html\`
     <main style="max-width: 760px; margin: 0 auto; padding: 32px;">
-      <h1>Welcome to Lito</h1>
+      <h1>Welcome to Litoho</h1>
       <p>Your app scaffold is ready.</p>
     </main>
   \`
@@ -294,7 +294,7 @@ import type { LitoLayoutModule } from "${APP_PACKAGE}";
 
 const layout: LitoLayoutModule<{ appName: string }> = {
   load: () => ({
-    appName: "Lito App"
+    appName: "Litoho App"
   }),
   render: ({ children }) => html\`
     <div style="min-height: 100vh; background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);">

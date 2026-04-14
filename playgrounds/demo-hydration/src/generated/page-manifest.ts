@@ -1,4 +1,4 @@
-import type { LitoPageManifestEntry } from "@lito/app";
+import type { LitoPageManifestEntry } from "@litoho/app";
 
 export const pageManifest: LitoPageManifestEntry[] = [
   {

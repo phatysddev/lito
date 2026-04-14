@@ -1,7 +1,7 @@
 "use server";
 
 import { html } from "lit";
-import type { LitoPageModule } from "@lito/app";
+import type { LitoPageModule } from "@litoho/app";
 import { get as getHealth } from "../../api/health.js";
 
 export type ActionData = {

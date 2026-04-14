@@ -5,7 +5,7 @@ import { createLitoServer, defineApiRoute } from "../../server/dist/index.js";
 test("createLitoServer renders SSR pages with middleware-provided request locals", async () => {
   const logs = [];
   const app = createLitoServer({
-    appName: "Lito Test",
+    appName: "Litoho Test",
     logger: {
       onRequestStart: ({ pathname }) => {
         logs.push(`start:${pathname}`);
@@ -40,7 +40,7 @@ test("createLitoServer renders SSR pages with middleware-provided request locals
   });
 
   const response = await app.fetch(
-    new Request("http://lito.test/?source=middleware", {
+    new Request("http://litoho.test/?source=middleware", {
       headers: {
         cookie: "theme=sea"
       }
@@ -53,7 +53,7 @@ test("createLitoServer renders SSR pages with middleware-provided request locals
   assert.match(body, /req-123:middleware:sea:number/);
   assert.match(
     body,
-    /window\.__LITO_DATA__=\{"pageData":\{"requestId":"req-123","source":"middleware","cookieTheme":"sea","startedAt":\d+\}\}/
+    /window\.__LITOHO_DATA__=\{"pageData":\{"requestId":"req-123","source":"middleware","cookieTheme":"sea","startedAt":\d+\}\}/
   );
   assert.deepEqual(logs[0], "start:/");
   assert.match(logs[1], /^done:\/:\d+$/);
@@ -61,7 +61,7 @@ test("createLitoServer renders SSR pages with middleware-provided request locals
 
 test("createLitoServer renders custom 404 pages", async () => {
   const app = createLitoServer({
-    appName: "Lito Test",
+    appName: "Litoho Test",
     middlewares: [
       (context, next) => {
         context.setLocal("requestId", "missing-404");
@@ -83,7 +83,7 @@ test("createLitoServer renders custom 404 pages", async () => {
     ]
   });
 
-  const response = await app.fetch(new Request("http://lito.test/unknown"));
+  const response = await app.fetch(new Request("http://litoho.test/unknown"));
   const body = await response.text();
 
   assert.equal(response.status, 404);
@@ -93,7 +93,7 @@ test("createLitoServer renders custom 404 pages", async () => {
 
 test("createLitoServer renders custom 500 pages and returns JSON for API failures", async () => {
   const app = createLitoServer({
-    appName: "Lito Test",
+    appName: "Litoho Test",
     errorPage: {
       document: ({ status }) => ({
         title: `Error ${status}`
@@ -121,9 +121,9 @@ test("createLitoServer renders custom 500 pages and returns JSON for API failure
     ]
   });
 
-  const pageResponse = await app.fetch(new Request("http://lito.test/boom"));
+  const pageResponse = await app.fetch(new Request("http://litoho.test/boom"));
   const pageBody = await pageResponse.text();
-  const apiResponse = await app.fetch(new Request("http://lito.test/api/boom"));
+  const apiResponse = await app.fetch(new Request("http://litoho.test/api/boom"));
   const apiBody = await apiResponse.json();
 
   assert.equal(pageResponse.status, 500);
@@ -145,7 +145,7 @@ test("defineApiRoute passes typed query data into API handlers", async () => {
   };
 
   const app = createLitoServer({
-    appName: "Lito Test",
+    appName: "Litoho Test",
     apiRoutes: [
       {
         id: "api:products:detail",
@@ -162,7 +162,7 @@ test("defineApiRoute passes typed query data into API handlers", async () => {
     ]
   });
 
-  const response = await app.fetch(new Request("http://lito.test/api/products/42?q=3&draft=true&tag=a&tag=b"));
+  const response = await app.fetch(new Request("http://litoho.test/api/products/42?q=3&draft=true&tag=a&tag=b"));
   const body = await response.json();
 
   assert.equal(response.status, 200);

@@ -1,8 +1,8 @@
 "use client";
 
 import { html } from "lit";
-import type { LitoPageModule } from "@lito/app";
-import { memo, signal } from "@lito/core";
+import type { LitoPageModule } from "@litoho/app";
+import { memo, signal } from "@litoho/core";
 
 type Todo = {
   id: number;
@@ -11,7 +11,7 @@ type Todo = {
 };
 
 const todos = signal<Todo[]>([
-  { id: 1, text: "Scaffold app with lito", done: true },
+  { id: 1, text: "Scaffold app with litoho", done: true },
   { id: 2, text: "Mark page as client-only", done: true },
   { id: 3, text: "Wire browser events directly", done: false }
 ]);
@@ -41,7 +41,7 @@ const totals = memo(() => {
 
 const page: LitoPageModule = {
   document: {
-    title: "Todos | Lito Demo State",
+    title: "Todos | Litoho Demo State",
     styles: ["body { margin: 0; font-family: \"IBM Plex Sans\", system-ui, sans-serif; }"]
   },
   render: () => {
@@ -53,7 +53,7 @@ const page: LitoPageModule = {
       <section style="max-width: 760px; margin: 0 auto; padding: 40px 24px 80px;">
         <div style="padding: 28px; border-radius: 28px; background: rgba(15, 23, 42, 0.84); border: 1px solid rgba(148, 163, 184, 0.16);">
           <div style="font-size: 0.84rem; color: #7dd3fc; text-transform: uppercase; letter-spacing: 0.14em;">Client app</div>
-          <h2 style="margin: 12px 0 8px; font-size: 2.2rem;">Mini todo flow inside Lito</h2>
+          <h2 style="margin: 12px 0 8px; font-size: 2.2rem;">Mini todo flow inside Litoho</h2>
           <div style="display: flex; gap: 10px; margin-top: 22px;">
             <input
               .value=${inputValue.value}

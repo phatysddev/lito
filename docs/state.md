@@ -1,6 +1,6 @@
-# Lito State
+# Litoho State
 
-Lito ships with a small reactive state layer designed to fit Lit and the rest of the framework runtime.
+Litoho ships with a small reactive state layer designed to fit Lit and the rest of the framework runtime.
 
 The current public API is:
 
@@ -12,7 +12,7 @@ The current public API is:
 - `isClient` / `onClient()` for browser-only work
 - `isServer` / `onServer()` for server-only work
 - `ReactiveMixin(Base)` for Lit integration
-- `LitoElement` as the default base class for Lito components
+- `LitoElement` as the default base class for Litoho components
 
 ## Philosophy
 
@@ -30,7 +30,7 @@ This keeps the runtime predictable and easy to debug while still giving us autom
 Use `signal()` for the smallest unit of writable reactive state.
 
 ```ts
-import { signal } from "@lito/core";
+import { signal } from "@litoho/core";
 
 const count = signal(0);
 
@@ -53,7 +53,7 @@ Available methods:
 Use `memo()` for derived values.
 
 ```ts
-import { signal, memo } from "@lito/core";
+import { signal, memo } from "@litoho/core";
 
 const count = signal(2);
 const doubled = memo(() => count.value * 2);
@@ -72,9 +72,9 @@ doubled.value; // 4
 Use `watch()` for side effects such as logging, timers, subscriptions, or syncing to browser APIs.
 
 ```ts
-import { signal, watch } from "@lito/core";
+import { signal, watch } from "@litoho/core";
 
-const user = signal("Lito");
+const user = signal("Litoho");
 
 const stop = watch(() => {
   console.log("Current user:", user.get());
@@ -97,7 +97,7 @@ Notes:
 - on `"use client"` pages, `watch()` is enough on its own
 
 ```ts
-import { memo, signal, watch } from "@lito/core";
+import { memo, signal, watch } from "@litoho/core";
 
 const count = signal(0);
 const doubled = memo(() => count.value * 2);
@@ -109,10 +109,10 @@ watch(() => {
 
 ## Browser-only helpers
 
-Lito exposes lightweight runtime helpers for code that must stay out of SSR:
+Litoho exposes lightweight runtime helpers for code that must stay out of SSR:
 
 ```ts
-import { isClient, onClient, isServer, onServer } from "@lito/core";
+import { isClient, onClient, isServer, onServer } from "@litoho/core";
 
 if (isClient) {
   console.log("Running in the browser");
@@ -136,9 +136,9 @@ onServer(() => {
 Use `batch()` to group several writes into a single notification wave.
 
 ```ts
-import { signal, batch } from "@lito/core";
+import { signal, batch } from "@litoho/core";
 
-const first = signal("Lito");
+const first = signal("Litoho");
 const second = signal("Framework");
 
 batch(() => {
@@ -154,10 +154,10 @@ This is useful when you want subscribers and `watch()` callbacks to observe the 
 Use `store()` when your state is naturally object-shaped.
 
 ```ts
-import { store } from "@lito/core";
+import { store } from "@litoho/core";
 
 const profile = store({
-  name: "Lito User",
+  name: "Litoho User",
   theme: "dark" as "dark" | "light",
   notifications: true
 });
@@ -183,7 +183,7 @@ If you extend `LitoElement`, any `signal()`, `memo()`, or `store().get(...)` cal
 
 ```ts
 import { html } from "lit";
-import { LitoElement, signal, memo } from "@lito/core";
+import { LitoElement, signal, memo } from "@litoho/core";
 
 const count = signal(0);
 const doubled = memo(() => count.get() * 2);

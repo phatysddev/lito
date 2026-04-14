@@ -1,7 +1,7 @@
 "use server";
 
 import { html } from "lit";
-import type { LitoPageModule } from "@lito/app";
+import type { LitoPageModule } from "@litoho/app";
 
 type CatalogPayload = {
   ok: boolean;
@@ -17,7 +17,7 @@ type CatalogPayload = {
 
 const page: LitoPageModule<CatalogPayload> = {
   document: {
-    title: "Server Data | Lito Demo State",
+    title: "Server Data | Litoho Demo State",
     styles: ["body { margin: 0; font-family: \"IBM Plex Sans\", system-ui, sans-serif; }"]
   },
   load: async ({ url }) => {
@@ -28,7 +28,7 @@ const page: LitoPageModule<CatalogPayload> = {
     <main style="max-width: 760px; margin: 0 auto; padding: 40px 24px 80px;">
       <section style="padding: 28px; border-radius: 28px; background: rgba(15, 23, 42, 0.84); border: 1px solid rgba(148, 163, 184, 0.16); color: #e5eefb;">
         <div style="font-size: 0.84rem; color: #7dd3fc; text-transform: uppercase; letter-spacing: 0.14em;">SSR data page</div>
-        <h2 style="margin: 12px 0 8px; font-size: 2.2rem;">Loaded from a typed Lito API route</h2>
+        <h2 style="margin: 12px 0 8px; font-size: 2.2rem;">Loaded from a typed Litoho API route</h2>
         <p style="margin: 0; color: #b9c7da; line-height: 1.7;">
           This page stays SSR and calls <code>/api/catalog</code> during <code>load()</code>.
         </p>

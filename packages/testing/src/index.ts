@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 
 export function createTempLitoProject(files: Record<string, string>) {
-  const rootDir = mkdtempSync(join(tmpdir(), "lito-testing-"));
+  const rootDir = mkdtempSync(join(tmpdir(), "litoho-testing-"));
 
   for (const [relativePath, contents] of Object.entries(files)) {
     const filePath = resolve(rootDir, relativePath);

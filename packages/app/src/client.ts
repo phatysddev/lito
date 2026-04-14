@@ -1,6 +1,6 @@
 import { render } from "lit";
 import type { LitoPageManifestEntry } from "./modules.js";
-import { LITO_DATA_KEY } from "./hydration.js";
+import { LITOHO_DATA_KEY } from "./hydration.js";
 
 type TrackFn = <R>(fn: () => R) => {
   result: R;
@@ -8,16 +8,16 @@ type TrackFn = <R>(fn: () => R) => {
 };
 
 export async function bootLitoClient(options: { pageManifest: LitoPageManifestEntry[] }) {
-  console.info("Booting Lito client runtime...");
+  console.info("Booting Litoho client runtime...");
 
-  const root = document.getElementById("lito-client-root");
+  const root = document.getElementById("litoho-client-root");
   if (!root) {
     return;
   }
 
   const routeId = root.getAttribute("data-route-id");
   if (!routeId) {
-    console.error("No data-route-id found on lito-client-root");
+    console.error("No data-route-id found on litoho-client-root");
     return;
   }
 
@@ -30,8 +30,8 @@ export async function bootLitoClient(options: { pageManifest: LitoPageManifestEn
   try {
     const pageResult = (await manifestEntry.page()) as any;
     const pageModule = pageResult.default;
-    const windowData = (window as any)[LITO_DATA_KEY] || {};
-    const track = (globalThis as typeof globalThis & { __LITO_TRACK__?: TrackFn }).__LITO_TRACK__;
+    const windowData = (window as any)[LITOHO_DATA_KEY] || {};
+    const track = (globalThis as typeof globalThis & { __LITOHO_TRACK__?: TrackFn }).__LITOHO_TRACK__;
 
     const context = {
       params: {},

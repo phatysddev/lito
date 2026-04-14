@@ -1,8 +1,8 @@
 {
-  "name": "lito-monorepo",
+  "name": "litoho-monorepo",
   "private": true,
   "version": "0.0.1",
-  "description": "Lito monorepo scaffold",
+  "description": "Litoho monorepo scaffold",
   "packageManager": "pnpm@10.0.0",
   "workspaces": [
     "packages/*",
@@ -11,7 +11,7 @@
   "scripts": {
     "build": "tsc -b packages/core packages/router packages/server packages/app packages/cli packages/testing",
     "typecheck": "tsc -b packages/core packages/router packages/server packages/app packages/cli packages/testing",
-    "test": "pnpm build && pnpm --filter @lito/testing test",
+    "test": "pnpm build && pnpm --filter @litoho/testing test",
     "clean": "rm -rf packages/*/dist playgrounds/*/dist",
     "release:pack": "node scripts/publish-packages.mjs --dry-run",
     "release:publish": "node scripts/publish-packages.mjs",
@@ -19,7 +19,7 @@
     "identity:apply": "node scripts/package-identity.mjs --apply"
   },
   "devDependencies": {
-    "lito": "workspace:*",
+    "litoho": "workspace:*",
     "@types/node": "^22.15.3",
     "typescript": "^5.8.3"
   }

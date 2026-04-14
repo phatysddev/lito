@@ -87,8 +87,8 @@ export function track<R>(fn: () => R): {
 }
 
 (globalThis as typeof globalThis & {
-  __LITO_TRACK__?: typeof track;
-}).__LITO_TRACK__ = track;
+  __LITOHO_TRACK__?: typeof track;
+}).__LITOHO_TRACK__ = track;
 
 export function batch(fn: () => void): void {
   batchDepth += 1;

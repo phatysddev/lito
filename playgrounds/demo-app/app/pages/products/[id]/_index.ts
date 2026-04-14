@@ -1,5 +1,5 @@
 import { html } from "lit";
-import type { LitoPageModule } from "@lito/app";
+import type { LitoPageModule } from "@litoho/app";
 
 const page: LitoPageModule = {
   document: {

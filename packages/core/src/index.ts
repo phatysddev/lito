@@ -1,5 +1,5 @@
 // Core component
-export { LitoElement } from "./lito-element.js";
+export { LitoElement, LitoElement as LitohoElement } from "./lito-element.js";
 
 // State primitives
 export { signal, memo, watch, batch, track } from "./signals.js";

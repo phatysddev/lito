@@ -15,7 +15,7 @@ export function generateRouteManifests(projectRoot: string) {
     throw new Error(
       [
         "Invalid page route files found in app/pages.",
-        "Lito now requires folder-based pages that render only from `_index.ts` files.",
+        "Litoho now requires folder-based pages that render only from `_index.ts` files.",
         "Allowed page module names are `_index.ts`, `_layout.ts`, `_not-found.ts`, and `_error.ts`.",
         "",
         ...invalidPageFiles.map((filePath) => {
@@ -55,7 +55,7 @@ export function generateRouteManifests(projectRoot: string) {
 
   writeFileSync(
     resolve(generatedDirectory, "page-manifest.ts"),
-    `import type { LitoPageManifestEntry } from "@lito/app";\n\nexport const pageManifest: LitoPageManifestEntry[] = [\n${pageManifestEntriesString}\n];\n`
+    `import type { LitoPageManifestEntry } from "@litoho/app";\n\nexport const pageManifest: LitoPageManifestEntry[] = [\n${pageManifestEntriesString}\n];\n`
   );
 
   writeFileSync(

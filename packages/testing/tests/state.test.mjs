@@ -60,7 +60,7 @@ test("batch coalesces signal notifications", async () => {
 });
 
 test("watch reruns when dependencies change", async () => {
-  const first = signal("Lito");
+  const first = signal("Litoho");
   const second = signal("Framework");
   const seen = [];
 
@@ -76,7 +76,7 @@ test("watch reruns when dependencies change", async () => {
   second.set("Ignored");
   await flushMicrotasks();
 
-  assert.deepEqual(seen, ["Lito Framework", "New State"]);
+  assert.deepEqual(seen, ["Litoho Framework", "New State"]);
 });
 
 test("watch accepts explicit dependency arrays", async () => {
@@ -102,7 +102,7 @@ test("watch accepts explicit dependency arrays", async () => {
 
 test("store supports whole-state and field subscriptions", async () => {
   const profile = store({
-    name: "Lito",
+    name: "Litoho",
     count: 1
   });
 
@@ -127,7 +127,7 @@ test("store supports whole-state and field subscriptions", async () => {
   unsubscribeCount();
 
   assert.deepEqual(states, [
-    { name: "Lito", count: 2 },
+    { name: "Litoho", count: 2 },
     { name: "Framework", count: 3 }
   ]);
   assert.deepEqual(counts, [2, 3]);

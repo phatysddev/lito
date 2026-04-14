@@ -1,6 +1,6 @@
-# @lito/core
+# @litoho/core
 
-Reactive primitives and the base component layer for Lito.
+Reactive primitives and the base component layer for Litoho.
 
 ## Public API
 
@@ -14,14 +14,14 @@ import {
   batch,
   track,
   store
-} from "@lito/core";
+} from "@litoho/core";
 ```
 
 ## Quick example
 
 ```ts
 import { html } from "lit";
-import { LitoElement, signal, memo } from "@lito/core";
+import { LitoElement, signal, memo } from "@litoho/core";
 
 const count = signal(0);
 const doubled = memo(() => count.get() * 2);

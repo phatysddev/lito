@@ -5,7 +5,7 @@ import type {
   LitoMiddleware,
   LitoNotFoundPage,
   LitoPageRoute
-} from "@lito/server";
+} from "@litoho/server";
 import type {
   LitoApiMiddlewareModule,
   LitoApiModule,

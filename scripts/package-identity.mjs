@@ -4,9 +4,9 @@ import { resolve, join, extname } from "node:path";
 const args = process.argv.slice(2);
 const rootArg = readArgValue(args, "--root") ?? ".";
 const rootDir = resolve(process.cwd(), rootArg);
-const scope = process.env.LITO_SCOPE?.trim() || "@lito";
-const cliPackage = process.env.LITO_CLI_PACKAGE?.trim() || "lito";
-const cliBin = process.env.LITO_CLI_BIN?.trim() || "lito";
+const scope = process.env.LITOHO_SCOPE?.trim() || "@litoho";
+const cliPackage = process.env.LITOHO_CLI_PACKAGE?.trim() || "litoho";
+const cliBin = process.env.LITOHO_CLI_BIN?.trim() || "litoho";
 const applyMode = args.includes("--apply");
 const previewMode = args.includes("--preview") || !applyMode;
 
@@ -87,7 +87,7 @@ function rewritePackageJson(source, relativePath, options) {
     json.name = options.cliPackage;
 
     if (json.bin && typeof json.bin === "object") {
-      const cliEntry = json.bin.lito ?? Object.values(json.bin)[0];
+      const cliEntry = json.bin.litoho ?? Object.values(json.bin)[0];
       json.bin = {
         [options.cliBin]: cliEntry
       };
@@ -107,11 +107,11 @@ function rewriteDependencyMap(dependencies, options) {
     return;
   }
 
-  renameDependency(dependencies, "@lito/app", `${options.scope}/app`);
-  renameDependency(dependencies, "@lito/core", `${options.scope}/core`);
-  renameDependency(dependencies, "@lito/router", `${options.scope}/router`);
-  renameDependency(dependencies, "@lito/server", `${options.scope}/server`);
-  renameDependency(dependencies, "lito", options.cliPackage);
+  renameDependency(dependencies, "@litoho/app", `${options.scope}/app`);
+  renameDependency(dependencies, "@litoho/core", `${options.scope}/core`);
+  renameDependency(dependencies, "@litoho/router", `${options.scope}/router`);
+  renameDependency(dependencies, "@litoho/server", `${options.scope}/server`);
+  renameDependency(dependencies, "litoho", options.cliPackage);
 }
 
 function renameDependency(dependencies, from, to) {
@@ -134,22 +134,22 @@ function rewriteScriptMap(scripts, options) {
     }
 
     scripts[key] = value
-      .replaceAll("pnpm exec lito ", `pnpm exec ${options.cliBin} `)
-      .replaceAll("npx lito ", `npx ${options.cliPackage} `);
+      .replaceAll("pnpm exec litoho ", `pnpm exec ${options.cliBin} `)
+      .replaceAll("npx litoho ", `npx ${options.cliPackage} `);
   }
 }
 
 function rewriteText(source, options) {
   return source
-    .replaceAll("@lito/app", `${options.scope}/app`)
-    .replaceAll("@lito/core", `${options.scope}/core`)
-    .replaceAll("@lito/router", `${options.scope}/router`)
-    .replaceAll("@lito/server", `${options.scope}/server`)
-    .replaceAll('process.env.LITO_SCOPE?.trim() || "@lito"', `process.env.LITO_SCOPE?.trim() || "${options.scope}"`)
-    .replaceAll('process.env.LITO_CLI_PACKAGE?.trim() || "lito"', `process.env.LITO_CLI_PACKAGE?.trim() || "${options.cliPackage}"`)
-    .replaceAll('process.env.LITO_CLI_BIN?.trim() || "lito"', `process.env.LITO_CLI_BIN?.trim() || "${options.cliBin}"`)
-    .replaceAll("pnpm exec lito ", `pnpm exec ${options.cliBin} `)
-    .replaceAll("npx lito ", `npx ${options.cliPackage} `);
+    .replaceAll("@litoho/app", `${options.scope}/app`)
+    .replaceAll("@litoho/core", `${options.scope}/core`)
+    .replaceAll("@litoho/router", `${options.scope}/router`)
+    .replaceAll("@litoho/server", `${options.scope}/server`)
+    .replaceAll('process.env.LITOHO_SCOPE?.trim() || "@litoho"', `process.env.LITOHO_SCOPE?.trim() || "${options.scope}"`)
+    .replaceAll('process.env.LITOHO_CLI_PACKAGE?.trim() || "litoho"', `process.env.LITOHO_CLI_PACKAGE?.trim() || "${options.cliPackage}"`)
+    .replaceAll('process.env.LITOHO_CLI_BIN?.trim() || "litoho"', `process.env.LITOHO_CLI_BIN?.trim() || "${options.cliBin}"`)
+    .replaceAll("pnpm exec litoho ", `pnpm exec ${options.cliBin} `)
+    .replaceAll("npx litoho ", `npx ${options.cliPackage} `);
 }
 
 function walkFiles(directory, options) {

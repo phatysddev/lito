@@ -1,1 +1,1 @@
-console.info("Lito client runtime loaded");
+console.info("Litoho client runtime loaded");

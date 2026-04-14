@@ -8,7 +8,7 @@ import type {
   LitoRequestContext,
   LitoNotFoundPage,
   LitoCacheConfig
-} from "@lito/server";
+} from "@litoho/server";
 
 export type LitoLayoutDataMap = Record<string, unknown>;
 

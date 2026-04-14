@@ -5,17 +5,17 @@ export default defineConfig({
   appType: "custom",
   resolve: {
     alias: {
-      "@lito/app": resolve(__dirname, "../../packages/app/src/index.ts"),
-      "@lito/core": resolve(__dirname, "../../packages/core/src/index.ts"),
-      "@lito/server": resolve(__dirname, "../../packages/server/src/index.ts")
+      "@litoho/app": resolve(__dirname, "../../packages/app/src/index.ts"),
+      "@litoho/core": resolve(__dirname, "../../packages/core/src/index.ts"),
+      "@litoho/server": resolve(__dirname, "../../packages/server/src/index.ts")
     }
   },
   optimizeDeps: {
-    exclude: ["@lito/app", "@lito/core", "@lito/server"]
+    exclude: ["@litoho/app", "@litoho/core", "@litoho/server"]
   },
   plugins: [
     {
-      name: "lito-strip-route-directives",
+      name: "litoho-strip-route-directives",
       enforce: "pre",
       transform(code, id) {
         if (!id.includes("/app/pages/")) {
@@ -29,12 +29,12 @@ export default defineConfig({
       }
     },
     {
-      name: "lito-protect-api",
+      name: "litoho-protect-api",
       enforce: "pre",
       resolveId(id, importer, options) {
         if (!options?.ssr && (id.includes("/app/api/") || id.endsWith("/app/api"))) {
           throw new Error(
-            `\n\n[LITO] Protection Error:\nCannot import backend API route '${id}' in a Client context!\n(Imported by ${importer})\n\n`
+            `\n\n[LITOHO] Protection Error:\nCannot import backend API route '${id}' in a Client context!\n(Imported by ${importer})\n\n`
           );
         }
       }

@@ -1,4 +1,4 @@
-import { defineApiRoute } from "@lito/server";
+import { defineApiRoute } from "@litoho/server";
 
 type ProductDetailParams = {
   id: string;

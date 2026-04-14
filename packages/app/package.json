@@ -1,5 +1,5 @@
 {
-  "name": "@lito/app",
+  "name": "@litoho/app",
   "version": "0.0.1",
   "type": "module",
   "main": "./dist/index.js",
@@ -20,7 +20,7 @@
     "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@lito/server": "^0.0.1",
+    "@litoho/server": "^0.0.1",
     "lit": "^3.0.0"
   }
 }

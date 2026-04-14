@@ -1,11 +1,11 @@
 "use client";
 
 import { html } from "lit";
-import type { LitoPageModule } from "@lito/app";
-import { batch, store } from "@lito/core";
+import type { LitoPageModule } from "@litoho/app";
+import { batch, store } from "@litoho/core";
 
 const profile = store({
-  name: "Lito Operator",
+  name: "Litoho Operator",
   role: "Framework Engineer",
   theme: "amber" as "amber" | "ocean",
   notifications: true
@@ -13,7 +13,7 @@ const profile = store({
 
 const page: LitoPageModule = {
   document: {
-    title: "Store | Lito Demo State",
+    title: "Store | Litoho Demo State",
     styles: ["body { margin: 0; font-family: \"IBM Plex Sans\", system-ui, sans-serif; }"]
   },
   render: () => {

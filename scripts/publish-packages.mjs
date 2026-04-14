@@ -6,10 +6,10 @@ import { applyPackageIdentity } from "./package-identity.mjs";
 
 const rootDir = process.cwd();
 const dryRun = process.argv.includes("--dry-run");
-const npmCache = "/tmp/lito-npm-cache";
-const scope = process.env.LITO_SCOPE?.trim() || "@lito";
-const cliPackageName = process.env.LITO_CLI_PACKAGE?.trim() || "lito";
-const cliBin = process.env.LITO_CLI_BIN?.trim() || "lito";
+const npmCache = "/tmp/litoho-npm-cache";
+const scope = process.env.LITOHO_SCOPE?.trim() || "@litoho";
+const cliPackageName = process.env.LITOHO_CLI_PACKAGE?.trim() || "litoho";
+const cliBin = process.env.LITOHO_CLI_BIN?.trim() || "litoho";
 const cliAccess = cliPackageName.startsWith("@") ? "public" : undefined;
 const releaseRoot = createReleaseWorkspace();
 
@@ -61,7 +61,7 @@ function exec(command, args, cwd) {
 }
 
 function createReleaseWorkspace() {
-  const tempRoot = mkdtempSync(join(tmpdir(), "lito-release-"));
+  const tempRoot = mkdtempSync(join(tmpdir(), "litoho-release-"));
 
   cpSync(resolve(rootDir, "packages"), resolve(tempRoot, "packages"), {
     recursive: true,
@@ -80,25 +80,25 @@ function createReleaseWorkspace() {
 
 function printPublishHelp(packageName) {
   console.error(`
-[Lito publish error]
+[Litoho publish error]
 Failed while publishing ${packageName}.
 
 Common cause:
 - you do not own the npm scope used by this repo
 
 Current publish settings:
-- LITO_SCOPE=${scope}
-- LITO_CLI_PACKAGE=${cliPackageName}
-- LITO_CLI_BIN=${cliBin}
+- LITOHO_SCOPE=${scope}
+- LITOHO_CLI_PACKAGE=${cliPackageName}
+- LITOHO_CLI_BIN=${cliBin}
 
 Examples:
-- LITO_SCOPE=@your-npm-scope pnpm run release:publish
-- LITO_SCOPE=@your-npm-scope LITO_CLI_PACKAGE=@your-npm-scope/lito pnpm run release:publish
-- LITO_SCOPE=@your-npm-scope LITO_CLI_PACKAGE=@your-npm-scope/lito LITO_CLI_BIN=lito pnpm run release:publish
+- LITOHO_SCOPE=@your-npm-scope pnpm run release:publish
+- LITOHO_SCOPE=@your-npm-scope LITOHO_CLI_PACKAGE=@your-npm-scope/litoho pnpm run release:publish
+- LITOHO_SCOPE=@your-npm-scope LITOHO_CLI_PACKAGE=@your-npm-scope/litoho LITOHO_CLI_BIN=litoho pnpm run release:publish
 
 Important:
-- \`npx lito new demo-app\` only works if you can publish the unscoped package name \`lito\`
-- if \`lito\` is unavailable, use a scoped CLI package and run:
+- \`npx litoho new demo-app\` only works if you can publish the unscoped package name \`litoho\`
+- if \`litoho\` is unavailable, use a scoped CLI package and run:
   npx ${cliPackageName} new demo-app
 `);
 }

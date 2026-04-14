@@ -10,7 +10,7 @@ export type {
   LitoPageManifestEntry,
   LitoPageModule
 } from "./modules.js";
-export { LITO_DATA_KEY, hydrateCustomElement, hydrateFromSsrData, readPageData, readSsrData } from "./hydration.js";
+export { LITOHO_DATA_KEY, hydrateCustomElement, hydrateFromSsrData, readPageData, readSsrData } from "./hydration.js";
 export {
   loadLitoAppFromManifest,
   scanApiMiddlewares,

@@ -1,4 +1,4 @@
-import type { LitoLayoutModule } from "@lito/app";
+import type { LitoLayoutModule } from "@litoho/app";
 
 const layout: LitoLayoutModule = {
   render: ({ children }) => children

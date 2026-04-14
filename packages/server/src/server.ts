@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { render } from "@lit-labs/ssr";
 import { collectResult } from "@lit-labs/ssr/lib/render-result.js";
-import { resolveRoute } from "@lito/router";
+import { resolveRoute } from "@litoho/router";
 import type { LitoClientAssets } from "./client-assets.js";
 
 export type LitoServerEnvironment = Record<string, string | undefined>;
@@ -245,7 +245,7 @@ export function defineApiRoute<
 
 export function createLitoServer(options: LitoServerOptions = {}) {
   const app = new Hono();
-  const appName = options.appName ?? "Lito";
+  const appName = options.appName ?? "Litoho";
   const pages = options.pages ?? [];
   const apiRoutes = options.apiRoutes ?? [];
   const middlewares = options.middlewares ?? [];
@@ -455,7 +455,7 @@ async function handlePageRequest(input: {
   } catch (error) {
     finalizeRequestTiming(requestContext);
     
-    console.error("[Lito Server Error]", error);
+    console.error("[Litoho Server Error]", error);
 
     await input.logger?.onRequestError?.({
       ...loggerContext,
@@ -524,7 +524,7 @@ async function executeAndCachePage(
     : undefined;
   
   const body = isClientOnly
-    ? `<div id="lito-client-root" data-route-id="${escapeHtml(input.route.id)}"></div>` 
+    ? `<div id="litoho-client-root" data-route-id="${escapeHtml(input.route.id)}"></div>` 
     : await collectResult(render(template));
 
   const response = createHtmlResponse({
@@ -574,7 +574,7 @@ async function renderMatchedPage(input: {
       if (cached.staleExpiry && now < cached.staleExpiry) {
         // Serve stale, rebuild background
         setTimeout(() => {
-          executeAndCachePage(input, cacheKey).catch((err) => console.error("[LITO] Background cache revalidation failed:", err));
+          executeAndCachePage(input, cacheKey).catch((err) => console.error("[LITOHO] Background cache revalidation failed:", err));
         }, 0);
         return new Response(cached.body, { headers: new Headers(cached.headers), status: 200 });
       }
@@ -677,7 +677,7 @@ async function runMiddlewares(input: {
 
   const dispatch = async (index: number): Promise<void> => {
     if (index <= currentIndex) {
-      throw new Error("Lito middleware `next()` called multiple times.");
+      throw new Error("Litoho middleware `next()` called multiple times.");
     }
 
     currentIndex = index;
@@ -769,7 +769,7 @@ function createHtmlDocument(input: {
     .map((link) => createLinkTag(link))
     .join("\n    ");
   const styleTags = (input.document?.styles ?? [])
-    .map((style, index) => `<style data-lito-style="${index}">${escapeStyle(style)}</style>`)
+    .map((style, index) => `<style data-litoho-style="${index}">${escapeStyle(style)}</style>`)
     .join("\n    ");
   const optionalHeadTags = [metaTags, documentLinkTags, clientStyles, styleTags].filter(Boolean).join("\n    ");
 
@@ -783,7 +783,7 @@ function createHtmlDocument(input: {
   </head>
   <body>
     <div id="app">${input.body}</div>
-    <script>window.__LITO_DATA__=${serializedData};</script>
+    <script>window.__LITOHO_DATA__=${serializedData};</script>
     ${clientScript}
   </body>
 </html>`;

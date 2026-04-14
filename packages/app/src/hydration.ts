@@ -1,4 +1,4 @@
-export const LITO_DATA_KEY = "__LITO_DATA__";
+export const LITOHO_DATA_KEY = "__LITOHO_DATA__";
 
 type ReadSsrDataOptions = {
   dataKey?: string;
@@ -30,7 +30,7 @@ export function readSsrData<Data = unknown>(options: ReadSsrDataOptions = {}): D
     return undefined;
   }
 
-  const key = options.dataKey ?? LITO_DATA_KEY;
+  const key = options.dataKey ?? LITOHO_DATA_KEY;
   const data = (source as Window & Record<string, unknown>)[key];
 
   return data as Data | undefined;

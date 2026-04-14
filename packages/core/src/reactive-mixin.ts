@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Lito ReactiveMixin — Auto-connect reactive reads to Lit's rendering cycle
+// Litoho ReactiveMixin — Auto-connect reactive reads to Lit's rendering cycle
 // ---------------------------------------------------------------------------
 
 import type { LitElement } from "lit";
@@ -15,7 +15,7 @@ type Constructor<T = {}> = new (...args: any[]) => T;
  * **Usage:**
  *
  * ```ts
- * import { ReactiveMixin, signal } from '@lito/core';
+ * import { ReactiveMixin, signal } from '@litoho/core';
  * import { LitElement, html } from 'lit';
  *
  * const count = signal(0);

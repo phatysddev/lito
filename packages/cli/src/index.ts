@@ -30,12 +30,12 @@ async function main() {
       const appName = restArgs[0];
 
       if (!appName) {
-        throw new Error("Usage: lito new <name>");
+        throw new Error("Usage: litoho new <name>");
       }
 
       const appRoot = resolve(process.cwd(), appName);
       createNewApp(appRoot);
-      console.log(`Created new Lito app at ${appRoot}`);
+      console.log(`Created new Litoho app at ${appRoot}`);
       return;
     }
     case "-g":
@@ -90,13 +90,13 @@ async function handleGenerateCommand(commandArgs: string[]) {
       return;
     case "page":
       if (!generatePath) {
-        throw new Error("Usage: lito generate page <path> [--params <name[,name2]>] [--ssr] [--csr] [--root <dir>]");
+        throw new Error("Usage: litoho generate page <path> [--params <name[,name2]>] [--ssr] [--csr] [--root <dir>]");
       }
       console.log(`Created page at ${createPageFile(projectRoot, buildRoutePath(generatePath, params), { mode })}`);
       return;
     case "api":
       if (!generatePath) {
-        throw new Error("Usage: lito generate api <path> [--params <name[,name2]>] [--query <key:type[,key2:type2]>] [--root <dir>]");
+        throw new Error("Usage: litoho generate api <path> [--params <name[,name2]>] [--query <key:type[,key2:type2]>] [--root <dir>]");
       }
       console.log(
         `Created api route at ${createApiFile(projectRoot, buildRoutePath(generatePath, params), { queryFields })}`
@@ -104,14 +104,14 @@ async function handleGenerateCommand(commandArgs: string[]) {
       return;
     case "resource":
       if (!generatePath) {
-        throw new Error("Usage: lito generate resource <name> [--root <dir>]");
+        throw new Error("Usage: litoho generate resource <name> [--root <dir>]");
       }
       createCrudResource(projectRoot, buildRoutePath(generatePath, params));
       console.log(`Created CRUD resource for ${buildRoutePath(generatePath, params)}`);
       return;
     case "layout":
       if (!generatePath) {
-        throw new Error("Usage: lito generate layout <path> [--params <name[,name2]>] [--root <dir>]");
+        throw new Error("Usage: litoho generate layout <path> [--params <name[,name2]>] [--root <dir>]");
       }
       console.log(`Created layout at ${createLayoutFile(projectRoot, buildRoutePath(generatePath, params))}`);
       return;
@@ -136,43 +136,43 @@ function runLocalCommand(cwd: string, binary: string, commandArgs: string[], env
 }
 
 function printHelp() {
-  console.log(`Lito CLI
+  console.log(`Litoho CLI
 
 Usage:
-  lito new <name>
-  lito dev [--root <dir>]
-  lito build [--root <dir>]
-  lito start [--root <dir>]
-  lito doctor [--root <dir>]
-  lito generate routes [--root <dir>]
-  lito g routes [--root <dir>]
-  lito generate page <path> [--params <name[,name2]>] [--ssr] [--csr] [--root <dir>]
-  lito -g page <path> [--params <name[,name2]>] [--ssr] [--csr] [--root <dir>]
-  lito g p <path> [--params <name[,name2]>] [--ssr] [--csr] [--root <dir>]
-  lito generate api <path> [--params <name[,name2]>] [--query <key:type[,key2:type2]>] [--root <dir>]
-  lito -g api <path> [--params <name[,name2]>] [--query <key:type[,key2:type2]>] [--root <dir>]
-  lito g a <path> [--params <name[,name2]>] [--query <key:type[,key2:type2]>] [--root <dir>]
-  lito generate resource <name> [--params <name[,name2]>] [--root <dir>]
-  lito g r <name> [--params <name[,name2]>] [--root <dir>]
-  lito generate layout <path> [--params <name[,name2]>] [--root <dir>]
-  lito g l <path> [--params <name[,name2]>] [--root <dir>]
+  litoho new <name>
+  litoho dev [--root <dir>]
+  litoho build [--root <dir>]
+  litoho start [--root <dir>]
+  litoho doctor [--root <dir>]
+  litoho generate routes [--root <dir>]
+  litoho g routes [--root <dir>]
+  litoho generate page <path> [--params <name[,name2]>] [--ssr] [--csr] [--root <dir>]
+  litoho -g page <path> [--params <name[,name2]>] [--ssr] [--csr] [--root <dir>]
+  litoho g p <path> [--params <name[,name2]>] [--ssr] [--csr] [--root <dir>]
+  litoho generate api <path> [--params <name[,name2]>] [--query <key:type[,key2:type2]>] [--root <dir>]
+  litoho -g api <path> [--params <name[,name2]>] [--query <key:type[,key2:type2]>] [--root <dir>]
+  litoho g a <path> [--params <name[,name2]>] [--query <key:type[,key2:type2]>] [--root <dir>]
+  litoho generate resource <name> [--params <name[,name2]>] [--root <dir>]
+  litoho g r <name> [--params <name[,name2]>] [--root <dir>]
+  litoho generate layout <path> [--params <name[,name2]>] [--root <dir>]
+  litoho g l <path> [--params <name[,name2]>] [--root <dir>]
 
 Examples:
-  lito new blog-app
-  lito generate page docs/getting-started
-  lito -g page docs/getting-started
-  lito g p docs/getting-started
-  lito -g page products --params id
+  litoho new blog-app
+  litoho generate page docs/getting-started
+  litoho -g page docs/getting-started
+  litoho g p docs/getting-started
+  litoho -g page products --params id
   # creates app/pages/docs/getting-started/_index.ts
-  lito generate api users --params id
-  lito g a products --params id --query q:number,draft:boolean,tag:strings
-  lito -g api users --params id,postId
-  lito g a users --params id
-  lito generate resource products --params id
-  lito g r products --params id
-  lito generate layout docs --params slug
-  lito g l docs --params slug
-  lito doctor
+  litoho generate api users --params id
+  litoho g a products --params id --query q:number,draft:boolean,tag:strings
+  litoho -g api users --params id,postId
+  litoho g a users --params id
+  litoho generate resource products --params id
+  litoho g r products --params id
+  litoho generate layout docs --params slug
+  litoho g l docs --params slug
+  litoho doctor
 `);
 }
 

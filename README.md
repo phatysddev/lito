@@ -1,12 +1,12 @@
-# Lito
+# Litoho
 
-Lito is an experimental full-stack framework built around Lit, file-based routing, SSR, and a small package-first architecture.
+Litoho is an experimental full-stack framework built around Lit, file-based routing, SSR, and a small package-first architecture.
 
 This README reflects the `0.0.1` milestone: the first usable monorepo snapshot with a working CLI, page routing, server rendering, client-only pages, typed API routes, and playground apps.
 
-## What Lito Is
+## What Litoho Is
 
-Lito is aiming for a simple mental model:
+Litoho is aiming for a simple mental model:
 
 - use Lit for UI
 - use folder-based routing for pages and APIs
@@ -21,7 +21,7 @@ Lito is aiming for a simple mental model:
 - File-based API routing from `app/api`
 - Nested layouts with `_layout.ts`
 - Special pages with `_not-found.ts` and `_error.ts`
-- SSR page rendering through `@lito/server`
+- SSR page rendering through `@litoho/server`
 - Client-only page mode through top-level `"use client"`
 - Server-intent page mode through top-level `"use server"`
 - Typed query parsing for API routes
@@ -34,7 +34,7 @@ Lito is aiming for a simple mental model:
 ```txt
 packages/
   app/        App contracts, manifest loading, client boot
-  cli/        lito CLI
+  cli/        litoho CLI
   core/       Reactive primitives and shared frontend runtime helpers
   router/     Route matching and resolution
   server/     SSR server runtime and Node app integration
@@ -51,22 +51,22 @@ planning/
 
 ## Package Overview
 
-- `@lito/core`
+- `@litoho/core`
   Reactive state primitives and shared frontend building blocks.
-- `@lito/app`
+- `@litoho/app`
   Page/layout module contracts, manifest loading, hydration helpers, and browser boot.
-- `@lito/router`
+- `@litoho/router`
   Route matching utilities for static and dynamic segments.
-- `@lito/server`
+- `@litoho/server`
   Hono-based server runtime, SSR document rendering, typed API helpers, and Node integration.
-- `lito`
+- `litoho`
   Project scaffolding, route manifest generation, dev/build/start commands, and doctor checks.
-- `@lito/testing`
+- `@litoho/testing`
   Test coverage for manifests, router behavior, SSR, and state primitives.
 
 ## Page Conventions
 
-Lito uses folder-based pages.
+Litoho uses folder-based pages.
 
 Allowed files in `app/pages`:
 
@@ -111,7 +111,7 @@ app/api/products/[id].ts
 app/api/_middleware.ts
 ```
 
-You can define typed query parsing with `defineApiRoute()` from `@lito/server`.
+You can define typed query parsing with `defineApiRoute()` from `@litoho/server`.
 
 ## Quick Start In This Repo
 
@@ -130,7 +130,7 @@ pnpm build
 3. Run tests:
 
 ```bash
-pnpm --filter @lito/testing test
+pnpm --filter @litoho/testing test
 ```
 
 4. Start a playground app:
@@ -147,7 +147,7 @@ The default local URL is `http://localhost:3000`.
 From the repo root:
 
 ```bash
-pnpm exec lito new my-app
+pnpm exec litoho new my-app
 cd my-app
 pnpm install
 pnpm dev
@@ -166,23 +166,23 @@ Generated apps include:
 Main commands available in `0.0.1`:
 
 ```bash
-lito new <name>
-lito dev [--root <dir>]
-lito build [--root <dir>]
-lito start [--root <dir>]
-lito doctor [--root <dir>]
-lito generate routes [--root <dir>]
+litoho new <name>
+litoho dev [--root <dir>]
+litoho build [--root <dir>]
+litoho start [--root <dir>]
+litoho doctor [--root <dir>]
+litoho generate routes [--root <dir>]
 ```
 
 Generate helpers:
 
 ```bash
-lito g p docs/getting-started
-lito g p products --params id
-lito g a users --params id
-lito g a products --params id --query q:number,draft:boolean,tag:strings
-lito g l docs
-lito g r products
+litoho g p docs/getting-started
+litoho g p products --params id
+litoho g a users --params id
+litoho g a products --params id --query q:number,draft:boolean,tag:strings
+litoho g l docs
+litoho g r products
 ```
 
 ## Example Page
@@ -191,8 +191,8 @@ lito g r products
 "use client";
 
 import { html } from "lit";
-import type { LitoPageModule } from "@lito/app";
-import { memo, signal, watch } from "@lito/core";
+import type { LitoPageModule } from "@litoho/app";
+import { memo, signal, watch } from "@litoho/core";
 
 const count = signal(0);
 const doubled = memo(() => count.value * 2);
@@ -220,7 +220,7 @@ export default page;
 ## Example API Route
 
 ```ts
-import { defineApiRoute } from "@lito/server";
+import { defineApiRoute } from "@litoho/server";
 
 export default defineApiRoute({
   query: {
@@ -238,7 +238,7 @@ export default defineApiRoute({
 
 ## Current Status
 
-`0.0.1` is still an early framework snapshot. The core developer flow works, but the project is still evolving and some conventions may tighten as Lito moves toward a more stable release.
+`0.0.1` is still an early framework snapshot. The core developer flow works, but the project is still evolving and some conventions may tighten as Litoho moves toward a more stable release.
 
 Things that are already solid enough to explore:
 
@@ -246,18 +246,18 @@ Things that are already solid enough to explore:
 - mixing SSR and client-only pages
 - generating routes and scaffolds with the CLI
 - using typed APIs and nested layouts
-- experimenting with the Lito state primitives
+- experimenting with the Litoho state primitives
 
 ## Development Notes
 
 - The repo uses `pnpm` workspaces.
 - Root build uses TypeScript project references.
 - Playgrounds are the best place to validate framework behavior before changing public contracts.
-- `lito doctor` helps catch invalid page file conventions.
+- `litoho doctor` helps catch invalid page file conventions.
 
 ## Roadmap
 
-The working roadmap lives in [planning/PLANNING.md](/Users/yodsaveesupachoktanasap/Desktop/lito/planning/PLANNING.md).
+The working roadmap lives in [planning/PLANNING.md](/Users/yodsaveesupachoktanasap/Desktop/litoho/planning/PLANNING.md).
 
 ## License
 

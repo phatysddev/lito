@@ -41,7 +41,7 @@ export function runLitoDoctor(projectRoot: string): LitoDoctorFinding[] {
   for (const filePath of invalidApiFiles) {
     findings.push({
       kind: "warning",
-      message: `${toRelative(projectRoot, filePath)} is a special API file name Lito does not recognize. Expected route modules or \`app/api/_middleware.ts\`.`
+      message: `${toRelative(projectRoot, filePath)} is a special API file name Litoho does not recognize. Expected route modules or \`app/api/_middleware.ts\`.`
     });
   }
 
@@ -85,7 +85,7 @@ export function runLitoDoctor(projectRoot: string): LitoDoctorFinding[] {
 
 export function formatDoctorReport(findings: readonly LitoDoctorFinding[]) {
   if (findings.length === 0) {
-    return "Lito doctor found no issues.";
+    return "Litoho doctor found no issues.";
   }
 
   return findings

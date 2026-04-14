@@ -1,5 +1,5 @@
 import { html } from "lit";
-import type { LitoLayoutModule } from "@lito/app";
+import type { LitoLayoutModule } from "@litoho/app";
 
 const sections = [
   { href: "/", label: "Overview", kind: "SSR shell" },
@@ -11,7 +11,7 @@ const sections = [
 
 const layout: LitoLayoutModule<{ appName: string; sections: typeof sections }> = {
   load: () => ({
-    appName: "Lito Demo State",
+    appName: "Litoho Demo State",
     sections
   }),
   render: ({ children, data }) => html`

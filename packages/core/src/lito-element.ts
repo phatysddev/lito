@@ -2,14 +2,14 @@ import { LitElement } from "lit";
 import { ReactiveMixin } from "./reactive-mixin.js";
 
 /**
- * Base element for all Lito components.
+ * Base element for all Litoho components.
  *
  * Extends `LitElement` with `ReactiveMixin` so that any signal read during
  * `render()` automatically triggers a re-render when it changes.
  *
  * ```ts
- * import { LitoElement } from '@lito/core';
- * import { signal } from '@lito/core';
+ * import { LitoElement } from '@litoho/core';
+ * import { signal } from '@litoho/core';
  * import { html } from 'lit';
  * import { customElement } from 'lit/decorators.js';
  *
@@ -25,6 +25,6 @@ import { ReactiveMixin } from "./reactive-mixin.js";
  */
 export class LitoElement extends ReactiveMixin(LitElement) {
   protected get frameworkName(): string {
-    return "Lito";
+    return "Litoho";
   }
 }

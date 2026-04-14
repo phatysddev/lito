@@ -1,9 +1,9 @@
 {
-  "name": "lito",
+  "name": "litoho",
   "version": "0.0.1",
   "type": "module",
   "bin": {
-    "lito": "./dist/index.js"
+    "litoho": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

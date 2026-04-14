@@ -1,7 +1,7 @@
 export function get() {
   return Response.json({
     ok: true,
-    framework: "Lito",
+    framework: "Litoho",
     area: "demo-state"
   });
 }
