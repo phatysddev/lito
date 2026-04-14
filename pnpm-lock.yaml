@@ -8,21 +8,21 @@ importers:
 
   .:
     devDependencies:
-      '@lito/cli':
-        specifier: workspace:*
-        version: link:packages/cli
       '@types/node':
         specifier: ^22.15.3
         version: 22.19.17
+      litoho:
+        specifier: workspace:*
+        version: link:packages/cli
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
 
   packages/app:
     dependencies:
-      '@lito/server':
-        specifier: workspace:*
-        version: link:../server
+      '@litoho/server':
+        specifier: ^0.0.4
+        version: 0.0.4(@types/node@22.19.17)
       lit:
         specifier: ^3.0.0
         version: 3.3.2
@@ -45,9 +45,9 @@ importers:
       '@lit-labs/ssr':
         specifier: ^3.3.1
         version: 3.3.1
-      '@lito/router':
-        specifier: workspace:*
-        version: link:../router
+      '@litoho/router':
+        specifier: ^0.0.4
+        version: 0.0.4
       hono:
         specifier: ^4.7.7
         version: 4.12.12
@@ -59,17 +59,17 @@ importers:
 
   playgrounds/demo-app:
     dependencies:
-      '@lito/app':
+      '@litoho/app':
         specifier: workspace:*
         version: link:../../packages/app
-      '@lito/server':
+      '@litoho/server':
         specifier: workspace:*
         version: link:../../packages/server
       lit:
         specifier: ^3.2.0
         version: 3.3.2
     devDependencies:
-      '@lito/cli':
+      litoho:
         specifier: workspace:*
         version: link:../../packages/cli
       tsx:
@@ -84,17 +84,42 @@ importers:
 
   playgrounds/demo-hydration:
     dependencies:
-      '@lito/app':
+      '@litoho/app':
         specifier: workspace:*
         version: link:../../packages/app
-      '@lito/server':
+      '@litoho/server':
         specifier: workspace:*
         version: link:../../packages/server
       lit:
         specifier: ^3.2.0
         version: 3.3.2
     devDependencies:
-      '@lito/cli':
+      litoho:
+        specifier: workspace:*
+        version: link:../../packages/cli
+      tsx:
+        specifier: ^4.19.2
+        version: 4.21.0
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
+      vite:
+        specifier: ^5.4.19
+        version: 5.4.21(@types/node@22.19.17)
+
+  playgrounds/demo-middleware:
+    dependencies:
+      '@litoho/app':
+        specifier: workspace:*
+        version: link:../../packages/app
+      '@litoho/server':
+        specifier: workspace:*
+        version: link:../../packages/server
+      lit:
+        specifier: ^3.2.0
+        version: 3.3.2
+    devDependencies:
+      litoho:
         specifier: workspace:*
         version: link:../../packages/cli
       tsx:
@@ -109,20 +134,20 @@ importers:
 
   playgrounds/demo-state:
     dependencies:
-      '@lito/app':
+      '@litoho/app':
         specifier: workspace:*
         version: link:../../packages/app
-      '@lito/core':
+      '@litoho/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@lito/server':
+      '@litoho/server':
         specifier: workspace:*
         version: link:../../packages/server
       lit:
         specifier: ^3.2.0
         version: 3.3.2
     devDependencies:
-      '@lito/cli':
+      litoho:
         specifier: workspace:*
         version: link:../../packages/cli
       tsx:
@@ -449,6 +474,12 @@ packages:
 
   '@lit/reactive-element@2.1.2':
     resolution: {integrity: sha512-pbCDiVMnne1lYUIaYNN5wrwQXDtHaYtg7YEFPeW+hws6U47WeFvISGUWekPGKWOP1ygrs0ef0o1VJMk1exos5A==}
+
+  '@litoho/router@0.0.4':
+    resolution: {integrity: sha512-T48aoX0RlWeOMX8jXqIJ/p5Iqa39eMg4Z/DU/5Yc399AzeI4Wrd2EdJexMZCP/UazwRUzN6ls9NwnOQoKerN9g==}
+
+  '@litoho/server@0.0.4':
+    resolution: {integrity: sha512-JK52rCDcUriiFcAY0QDm3WoMDZvyLcdbI3D33VwK7oWjuI6HXGbV9toqDSa6K9SZHZruN2K3QQt4VHFuDmdQuQ==}
 
   '@parse5/tools@0.3.0':
     resolution: {integrity: sha512-zxRyTHkqb7WQMV8kTNBKWb1BeOFUKXBXTBWuxg9H9hfvQB3IwP6Iw2U75Ia5eyRxPNltmY7E8YAlz6zWwUnjKg==}
@@ -910,6 +941,25 @@ snapshots:
   '@lit/reactive-element@2.1.2':
     dependencies:
       '@lit-labs/ssr-dom-shim': 1.5.1
+
+  '@litoho/router@0.0.4': {}
+
+  '@litoho/server@0.0.4(@types/node@22.19.17)':
+    dependencies:
+      '@hono/node-server': 1.19.14(hono@4.12.12)
+      '@lit-labs/ssr': 3.3.1
+      '@litoho/router': 0.0.4
+      hono: 4.12.12
+      vite: 5.4.21(@types/node@22.19.17)
+    transitivePeerDependencies:
+      - '@types/node'
+      - less
+      - lightningcss
+      - sass
+      - sass-embedded
+      - stylus
+      - sugarss
+      - terser
 
   '@parse5/tools@0.3.0':
     dependencies:

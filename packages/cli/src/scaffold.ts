@@ -90,6 +90,32 @@ export default layout;
   return targetFile;
 }
 
+export function createApiMiddlewareFile(rootDir: string) {
+  const targetFile = resolve(rootDir, "app/api/_middleware.ts");
+  ensureParentDirectory(targetFile);
+
+  if (existsSync(targetFile)) {
+    throw new Error(`API middleware already exists: ${targetFile}`);
+  }
+
+  writeFileSync(
+    targetFile,
+    `import type { LitoMiddleware } from "${SERVER_PACKAGE}";
+
+const middleware: LitoMiddleware = async (context, next) => {
+  context.setLocal("requestId", crypto.randomUUID());
+  context.setLocal("requestedAt", new Date(context.timing.startedAt).toISOString());
+
+  await next();
+};
+
+export default middleware;
+`
+  );
+
+  return targetFile;
+}
+
 export function createNewApp(rootDir: string) {
   const appName = rootDir.split(/[/\\]/).pop() ?? "litoho-app";
   mkdirSync(resolve(rootDir, "app/pages"), { recursive: true });
@@ -231,19 +257,16 @@ export default defineConfig({
   if (!existsSync(serverEntryPath)) {
     writeFileSync(
       serverEntryPath,
-      `import { scanApiRoutesFromManifest, scanPageRoutesFromManifest } from "${APP_PACKAGE}";
+      `import { loadLitoAppFromManifest } from "${APP_PACKAGE}";
 import { resolve } from "node:path";
 import { startLitoNodeApp } from "${SERVER_PACKAGE}";
 import { apiModulePaths } from "./src/generated/api-manifest";
 import { pageManifest } from "./src/generated/page-manifest";
 
 const manifestBaseUrl = new URL("./src/generated/", import.meta.url);
-const pages = await scanPageRoutesFromManifest({
+const app = await loadLitoAppFromManifest({
   manifestBaseUrl,
-  pageManifest
-});
-const apiRoutes = await scanApiRoutesFromManifest({
-  manifestBaseUrl,
+  pageManifest,
   apiModulePaths
 });
 
@@ -252,8 +275,11 @@ await startLitoNodeApp({
   rootDir: resolve(process.cwd()),
   mode: process.env.NODE_ENV === "production" ? "production" : "development",
   port: Number(process.env.PORT ?? 3000),
-  pages,
-  apiRoutes
+  pages: app.pages,
+  apiRoutes: app.apiRoutes,
+  middlewares: app.middlewares,
+  notFoundPage: app.notFoundPage,
+  errorPage: app.errorPage
 });
 
 console.log(\`Litoho app is running at http://localhost:\${process.env.PORT ?? 3000}\`);

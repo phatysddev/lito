@@ -5,6 +5,7 @@ import { resolve } from "node:path";
 import { formatDoctorReport, hasDoctorErrors, runLitoDoctor } from "./doctor.js";
 import { generateRouteManifests } from "./generate-route-manifests.js";
 import {
+  createApiMiddlewareFile,
   createApiFile,
   createCrudResource,
   createLayoutFile,
@@ -109,6 +110,12 @@ async function handleGenerateCommand(commandArgs: string[]) {
       createCrudResource(projectRoot, buildRoutePath(generatePath, params));
       console.log(`Created CRUD resource for ${buildRoutePath(generatePath, params)}`);
       return;
+    case "middleware":
+      if (generatePath && generatePath !== "api") {
+        throw new Error("Usage: litoho generate middleware [api] [--root <dir>]");
+      }
+      console.log(`Created api middleware at ${createApiMiddlewareFile(projectRoot)}`);
+      return;
     case "layout":
       if (!generatePath) {
         throw new Error("Usage: litoho generate layout <path> [--params <name[,name2]>] [--root <dir>]");
@@ -154,6 +161,8 @@ Usage:
   litoho g a <path> [--params <name[,name2]>] [--query <key:type[,key2:type2]>] [--root <dir>]
   litoho generate resource <name> [--params <name[,name2]>] [--root <dir>]
   litoho g r <name> [--params <name[,name2]>] [--root <dir>]
+  litoho generate middleware [api] [--root <dir>]
+  litoho g m [api] [--root <dir>]
   litoho generate layout <path> [--params <name[,name2]>] [--root <dir>]
   litoho g l <path> [--params <name[,name2]>] [--root <dir>]
 
@@ -170,6 +179,8 @@ Examples:
   litoho g a users --params id
   litoho generate resource products --params id
   litoho g r products --params id
+  litoho generate middleware
+  litoho g m
   litoho generate layout docs --params slug
   litoho g l docs --params slug
   litoho doctor
@@ -260,6 +271,8 @@ function normalizeGenerateTarget(value: string | undefined) {
       return "api";
     case "r":
       return "resource";
+    case "m":
+      return "middleware";
     case "l":
       return "layout";
     default:
