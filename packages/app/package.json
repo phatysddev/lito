@@ -1,6 +1,6 @@
 {
   "name": "@litoho/app",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "type": "module",
   "repository": {
     "type": "git",
@@ -29,7 +29,7 @@
     "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@litoho/server": "^0.0.3",
+    "@litoho/server": "^0.0.4",
     "lit": "^3.0.0"
   }
 }
