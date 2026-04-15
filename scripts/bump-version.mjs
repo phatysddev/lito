@@ -24,6 +24,7 @@ const packageJsonFiles = [
 
 const textFiles = [
   "packages/cli/src/scaffold.ts",
+  "packages/cli/dist/scaffold.js",
   "README.md",
   "packages/cli/README.md"
 ];

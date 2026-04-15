@@ -89,6 +89,8 @@ for (const pkg of packages) {
   console.log("");
 }
 
+validateCliScaffoldVersion();
+
 console.log("Suggested commands:");
 console.log(`- pnpm run identity:preview`);
 console.log(`- LITOHO_SCOPE=${scope} LITOHO_CLI_PACKAGE=${cliPackageName} LITOHO_CLI_BIN=${cliBin} pnpm run release:pack`);
@@ -100,3 +102,40 @@ if (hasErrors) {
 }
 
 console.log("\nPreflight result: OK");
+
+function validateCliScaffoldVersion() {
+  const cliPackageJsonPath = resolve(rootDir, "packages/cli/package.json");
+  const cliSourceScaffoldPath = resolve(rootDir, "packages/cli/src/scaffold.ts");
+  const cliDistScaffoldPath = resolve(rootDir, "packages/cli/dist/scaffold.js");
+
+  if (!existsSync(cliPackageJsonPath) || !existsSync(cliSourceScaffoldPath) || !existsSync(cliDistScaffoldPath)) {
+    hasErrors = true;
+    console.log("[error] CLI scaffold version check could not run because one or more files are missing.");
+    return;
+  }
+
+  const cliPackageVersion = JSON.parse(readFileSync(cliPackageJsonPath, "utf8")).version;
+  const sourceVersion = readScaffoldVersion(cliSourceScaffoldPath);
+  const distVersion = readScaffoldVersion(cliDistScaffoldPath);
+
+  console.log("packages/cli scaffold version sync");
+  console.log(`- package version: ${cliPackageVersion}`);
+  console.log(`- src scaffold dependency version: ${sourceVersion ?? "missing"}`);
+  console.log(`- dist scaffold dependency version: ${distVersion ?? "missing"}`);
+
+  const expected = `^${cliPackageVersion}`;
+  if (sourceVersion !== expected || distVersion !== expected) {
+    hasErrors = true;
+    console.log(`- status: error, expected both scaffold versions to be ${expected}`);
+  } else {
+    console.log("- status: ok");
+  }
+
+  console.log("");
+}
+
+function readScaffoldVersion(filePath) {
+  const source = readFileSync(filePath, "utf8");
+  const match = source.match(/LITOHO_VERSION\s*=\s*["'`]([^"'`]+)["'`]/);
+  return match?.[1] ?? null;
+}
