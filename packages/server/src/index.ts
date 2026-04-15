@@ -3,6 +3,21 @@ export { startLitoNodeApp } from "./node-app.js";
 export { createLitoServer } from "./server.js";
 export { defineApiRoute } from "./server.js";
 export { readQuery } from "./server.js";
+export { badRequest, forbidden, html, json, methodNotAllowed, notFound, redirect, unauthorized } from "./server.js";
+export { composeMiddlewares } from "./server.js";
+export {
+  createAuthGuardMiddleware,
+  requireAuth,
+  requireRole,
+  createLoggerMiddleware,
+  createRequestMetaMiddleware,
+  createTimingMiddleware,
+  withCacheControl,
+  withCors,
+  withRequestId,
+  withSecurityHeaders,
+  withRateLimit
+} from "./server.js";
 export { startLitoNodeServer } from "./node-server.js";
 export type {
   LitoApiContext,
@@ -15,18 +30,30 @@ export type {
   LitoDocumentMetaTag,
   LitoDocumentLinkTag,
   LitoLoggerHooks,
+  LitoLoggerMiddlewareOptions,
   LitoMiddleware,
+  LitoMiddlewareNext,
   LitoMiddlewareContext,
+  LitoAuthGuardMiddlewareOptions,
+  LitoCacheControlOptions,
+  LitoCorsOptions,
   LitoNotFoundPage,
   LitoPageRoute,
+  LitoRateLimitOptions,
+  LitoRequireAuthOptions,
+  LitoRequireRoleOptions,
+  LitoRequestMetaMiddlewareOptions,
+  LitoRequestIdOptions,
   LitoRequestContext,
   LitoRequestLocals,
   LitoRequestTiming,
+  LitoSecurityHeadersOptions,
   LitoParsedQuery,
   LitoQuerySchema,
   LitoQueryValueType,
   LitoServerEnvironment,
   LitoServerOptions,
+  LitoTimingMiddlewareOptions,
   LitoCacheConfig
 } from "./server.js";
 export type { LitoClientAssets } from "./client-assets.js";

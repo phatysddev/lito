@@ -8,10 +8,16 @@ import {
   createApiMiddlewareFile,
   createApiFile,
   createCrudResource,
+  createErrorPageFile,
   createLayoutFile,
+  createMiddlewareStackFile,
   createNewApp,
+  createNotFoundPageFile,
   createPageFile,
-  type ApiQueryField
+  type ApiQueryField,
+  type MiddlewareStackTemplate,
+  type PageTemplate,
+  type MiddlewareTemplate
 } from "./scaffold.js";
 
 const rawArgs = process.argv.slice(2);
@@ -74,11 +80,15 @@ async function main() {
 async function handleGenerateCommand(commandArgs: string[]) {
   const params = readRepeatedFlagValues(commandArgs, "--params");
   const queryFields = readQueryFlags(commandArgs);
+  const templateValue = readFlagValue(commandArgs, "--template");
   const isCsr = commandArgs.includes("--csr");
   const isSsr = commandArgs.includes("--ssr");
+  const force = commandArgs.includes("--force");
   let filteredArgs = stripRepeatedFlag(stripRepeatedFlag(commandArgs, "--params"), "--query");
+  filteredArgs = stripFlag(filteredArgs, "--template");
   filteredArgs = stripBooleanFlag(filteredArgs, "--csr");
   filteredArgs = stripBooleanFlag(filteredArgs, "--ssr");
+  filteredArgs = stripBooleanFlag(filteredArgs, "--force");
   const [rawGenerateTarget, generatePath] = filteredArgs;
   const generateTarget = normalizeGenerateTarget(rawGenerateTarget);
 
@@ -93,7 +103,13 @@ async function handleGenerateCommand(commandArgs: string[]) {
       if (!generatePath) {
         throw new Error("Usage: litoho generate page <path> [--params <name[,name2]>] [--ssr] [--csr] [--root <dir>]");
       }
-      console.log(`Created page at ${createPageFile(projectRoot, buildRoutePath(generatePath, params), { mode })}`);
+      console.log(
+        `Created page at ${createPageFile(projectRoot, buildRoutePath(generatePath, params), {
+          mode,
+          throwDemo: commandArgs.includes("--throw-demo"),
+          template: parsePageTemplate(templateValue)
+        })}`
+      );
       return;
     case "api":
       if (!generatePath) {
@@ -111,10 +127,28 @@ async function handleGenerateCommand(commandArgs: string[]) {
       console.log(`Created CRUD resource for ${buildRoutePath(generatePath, params)}`);
       return;
     case "middleware":
-      if (generatePath && generatePath !== "api") {
-        throw new Error("Usage: litoho generate middleware [api] [--root <dir>]");
+      if (generatePath && generatePath !== "api" && !isMiddlewareTemplateCandidate(generatePath)) {
+        throw new Error("Usage: litoho generate middleware [api|auth|cors|rate-limit|logger|timing|basic] [--root <dir>]");
       }
-      console.log(`Created api middleware at ${createApiMiddlewareFile(projectRoot)}`);
+      console.log(
+        `Created api middleware at ${createApiMiddlewareFile(projectRoot, {
+          force,
+          template: parseMiddlewareTemplate(generatePath && generatePath !== "api" ? generatePath : templateValue)
+        })}`
+      );
+      return;
+    case "middleware-stack":
+      console.log(
+        `Created middleware stack at ${createMiddlewareStackFile(projectRoot, parseMiddlewareStackTemplate(generatePath), {
+          force
+        })}`
+      );
+      return;
+    case "not-found":
+      console.log(`Created not-found page at ${createNotFoundPageFile(projectRoot, { force })}`);
+      return;
+    case "error":
+      console.log(`Created error page at ${createErrorPageFile(projectRoot, { force })}`);
       return;
     case "layout":
       if (!generatePath) {
@@ -153,16 +187,22 @@ Usage:
   litoho doctor [--root <dir>]
   litoho generate routes [--root <dir>]
   litoho g routes [--root <dir>]
-  litoho generate page <path> [--params <name[,name2]>] [--ssr] [--csr] [--root <dir>]
-  litoho -g page <path> [--params <name[,name2]>] [--ssr] [--csr] [--root <dir>]
-  litoho g p <path> [--params <name[,name2]>] [--ssr] [--csr] [--root <dir>]
+  litoho generate page <path> [--params <name[,name2]>] [--ssr] [--csr] [--throw-demo] [--template <client-counter|server-data|api-inspector|not-found-demo>] [--root <dir>]
+  litoho -g page <path> [--params <name[,name2]>] [--ssr] [--csr] [--throw-demo] [--template <client-counter|server-data|api-inspector|not-found-demo>] [--root <dir>]
+  litoho g p <path> [--params <name[,name2]>] [--ssr] [--csr] [--throw-demo] [--template <client-counter|server-data|api-inspector|not-found-demo>] [--root <dir>]
   litoho generate api <path> [--params <name[,name2]>] [--query <key:type[,key2:type2]>] [--root <dir>]
   litoho -g api <path> [--params <name[,name2]>] [--query <key:type[,key2:type2]>] [--root <dir>]
   litoho g a <path> [--params <name[,name2]>] [--query <key:type[,key2:type2]>] [--root <dir>]
   litoho generate resource <name> [--params <name[,name2]>] [--root <dir>]
   litoho g r <name> [--params <name[,name2]>] [--root <dir>]
-  litoho generate middleware [api] [--root <dir>]
-  litoho g m [api] [--root <dir>]
+  litoho generate middleware [api|auth|cors|rate-limit|basic|logger|timing] [--template <basic|logger|auth|cors|rate-limit|timing>] [--force] [--root <dir>]
+  litoho g m [api|auth|cors|rate-limit|basic|logger|timing] [--template <basic|logger|auth|cors|rate-limit|timing>] [--force] [--root <dir>]
+  litoho generate middleware-stack <web|api|secure-api|browser-app> [--force] [--root <dir>]
+  litoho g ms <web|api|secure-api|browser-app> [--force] [--root <dir>]
+  litoho generate not-found [--force] [--root <dir>]
+  litoho g nf [--force] [--root <dir>]
+  litoho generate error [--force] [--root <dir>]
+  litoho g err [--force] [--root <dir>]
   litoho generate layout <path> [--params <name[,name2]>] [--root <dir>]
   litoho g l <path> [--params <name[,name2]>] [--root <dir>]
 
@@ -171,6 +211,11 @@ Examples:
   litoho generate page docs/getting-started
   litoho -g page docs/getting-started
   litoho g p docs/getting-started
+  litoho g p counter-lab --template client-counter
+  litoho g p server-snapshot --template server-data
+  litoho g p api-lab --template api-inspector
+  litoho g p missing-lab --template not-found-demo
+  litoho g p failure-lab --throw-demo
   litoho -g page products --params id
   # creates app/pages/docs/getting-started/_index.ts
   litoho generate api users --params id
@@ -179,8 +224,18 @@ Examples:
   litoho g a users --params id
   litoho generate resource products --params id
   litoho g r products --params id
-  litoho generate middleware
-  litoho g m
+  litoho generate middleware --template logger
+  litoho g middleware auth
+  litoho g middleware cors
+  litoho g middleware rate-limit
+  litoho g m --template auth --force
+  litoho g m --template timing --force
+  litoho g ms web
+  litoho g ms api --force
+  litoho g ms secure-api --force
+  litoho g ms browser-app --force
+  litoho g nf
+  litoho g err
   litoho generate layout docs --params slug
   litoho g l docs --params slug
   litoho doctor
@@ -273,6 +328,12 @@ function normalizeGenerateTarget(value: string | undefined) {
       return "resource";
     case "m":
       return "middleware";
+    case "ms":
+      return "middleware-stack";
+    case "nf":
+      return "not-found";
+    case "err":
+      return "error";
     case "l":
       return "layout";
     default:
@@ -299,6 +360,56 @@ function parseQueryField(rawValue: string): ApiQueryField {
 
 function isApiQueryFieldType(value: string): value is ApiQueryField["type"] {
   return value === "string" || value === "number" || value === "boolean" || value === "strings";
+}
+
+function parseMiddlewareTemplate(value: string | undefined): MiddlewareTemplate | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  if (
+    value === "basic" ||
+    value === "logger" ||
+    value === "auth" ||
+    value === "timing" ||
+    value === "cors" ||
+    value === "rate-limit"
+  ) {
+    return value;
+  }
+
+  throw new Error(`Invalid middleware template "${value}". Use "basic", "logger", "auth", "cors", "rate-limit", or "timing".`);
+}
+
+function parsePageTemplate(value: string | undefined): PageTemplate | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  if (
+    value === "client-counter" ||
+    value === "server-data" ||
+    value === "api-inspector" ||
+    value === "not-found-demo"
+  ) {
+    return value;
+  }
+
+  throw new Error(
+    `Invalid page template "${value}". Use "client-counter", "server-data", "api-inspector", or "not-found-demo".`
+  );
+}
+
+function parseMiddlewareStackTemplate(value: string | undefined): MiddlewareStackTemplate {
+  if (value === "web" || value === "api" || value === "secure-api" || value === "browser-app") {
+    return value;
+  }
+
+  throw new Error(`Invalid middleware stack "${value ?? "(missing)"}". Use "web", "api", "secure-api", or "browser-app".`);
+}
+
+function isMiddlewareTemplateCandidate(value: string) {
+  return value === "basic" || value === "logger" || value === "auth" || value === "timing" || value === "cors" || value === "rate-limit";
 }
 
 main().catch((error) => {

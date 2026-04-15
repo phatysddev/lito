@@ -1,0 +1,23 @@
+{
+  "name": "middleware-lab",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate:routes": "npm exec litoho -- generate routes --root .",
+    "dev": "npm exec litoho -- dev --root .",
+    "build": "npm exec litoho -- build --root .",
+    "start": "npm exec litoho -- start --root ."
+  },
+  "dependencies": {
+    "@litoho/app": "^0.0.5",
+    "@litoho/core": "^0.0.5",
+    "@litoho/server": "^0.0.5",
+    "lit": "^3.2.0"
+  },
+  "devDependencies": {
+    "litoho": "^0.0.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.8.3",
+    "vite": "^5.4.19"
+  }
+}

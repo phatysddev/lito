@@ -22,8 +22,14 @@ const layout: LitoLayoutModule<{ appName: string }> = {
           <nav style="display: flex; gap: 12px; flex-wrap: wrap;">
             <a href="/" style="color: #0f172a;">Home</a>
             <a href="/request-inspector?source=page" style="color: #0f172a;">Request Inspector</a>
-            <a href="/docs/trace?source=docs" style="color: #0f172a;">Docs Trace</a>
+            <a href="/docs/trace?source=docs&token=demo-secret" style="color: #0f172a;">Docs Trace</a>
+            <a href="/counter-lab" style="color: #0f172a;">Counter Lab</a>
+            <a href="/server-snapshot?source=layout" style="color: #0f172a;">Server Snapshot</a>
+            <a href="/api-lab" style="color: #0f172a;">API Lab</a>
+            <a href="/missing-lab" style="color: #0f172a;">404 Lab</a>
+            <a href="/failure-lab" style="color: #0f172a;">Error Demo</a>
             <a href="/api/request-info?source=api" style="color: #0f172a;">API JSON</a>
+            <a href="/api/secure-data" style="color: #0f172a;">Secure API</a>
           </nav>
         </div>
       </header>

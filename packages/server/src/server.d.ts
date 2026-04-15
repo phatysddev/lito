@@ -37,7 +37,8 @@ export type LitoMiddlewareContext = LitoRequestContext & {
     kind: "page" | "api";
     routeId?: string;
 };
-export type LitoMiddleware = (context: LitoMiddlewareContext, next: () => Promise<void>) => void | Promise<void>;
+export type LitoMiddlewareNext = () => Promise<Response | undefined>;
+export type LitoMiddleware = (context: LitoMiddlewareContext, next: LitoMiddlewareNext) => Response | void | Promise<Response | void>;
 export type LitoLoggerHooks = {
     onRequestStart?: (context: LitoMiddlewareContext) => void | Promise<void>;
     onRequestComplete?: (context: LitoMiddlewareContext & {
@@ -132,6 +133,96 @@ export type LitoErrorPage = {
     document?: LitoDocumentDefinition | ((context: LitoErrorPageContext) => LitoDocumentDefinition | Promise<LitoDocumentDefinition>);
     render: (context: LitoErrorPageContext) => unknown;
 };
+export declare function json(data: unknown, init?: ResponseInit): Response;
+export declare function redirect(location: string | URL, status?: number): Response;
+export declare function unauthorized(body?: BodyInit | null, init?: ResponseInit): Response;
+export declare function forbidden(body?: BodyInit | null, init?: ResponseInit): Response;
+export declare function badRequest(body?: BodyInit | null, init?: ResponseInit): Response;
+export declare function notFound(body?: BodyInit | null, init?: ResponseInit): Response;
+export declare function methodNotAllowed(body?: BodyInit | null, init?: ResponseInit): Response;
+export declare function html(body: BodyInit | null, init?: ResponseInit): Response;
+export type LitoRequestMetaMiddlewareOptions = {
+    requestIdKey?: string;
+    requestedAtKey?: string;
+    sourceKey?: string;
+    visitorKey?: string;
+    requestPathKey?: string;
+    sourceQueryParam?: string;
+    visitorCookieName?: string;
+};
+export type LitoAuthGuardMiddlewareOptions = {
+    tokenSources?: Array<"cookie" | "header" | "query">;
+    cookieName?: string;
+    headerName?: string;
+    queryParam?: string;
+    expectedToken?: string;
+    protectedPathPrefixes?: string[];
+    tokenKey?: string;
+    authenticatedKey?: string;
+    guardKey?: string;
+    unauthorizedResponse?: Response | ((context: LitoMiddlewareContext) => Response | Promise<Response>);
+    createError?: (context: LitoMiddlewareContext) => Error;
+};
+export type LitoTimingMiddlewareOptions = {
+    startedAtKey?: string;
+    durationKey?: string;
+    completedAtKey?: string;
+};
+export type LitoLoggerMiddlewareOptions = {
+    requestIdKey?: string;
+    durationKey?: string;
+    log?: (message: string, context: LitoMiddlewareContext) => void;
+};
+export type LitoRequireAuthOptions = LitoAuthGuardMiddlewareOptions;
+export type LitoRequireRoleOptions = {
+    requiredRoles: string[];
+    protectedPathPrefixes?: string[];
+    roleKey?: string;
+    roleSources?: Array<"local" | "header" | "query" | "cookie">;
+    headerName?: string;
+    queryParam?: string;
+    cookieName?: string;
+    forbiddenResponse?: Response | ((context: LitoMiddlewareContext) => Response | Promise<Response>);
+    createError?: (context: LitoMiddlewareContext) => Error;
+};
+export type LitoCorsOptions = {
+    allowOrigin?: string | string[];
+    allowMethods?: string[];
+    allowHeaders?: string[];
+    exposeHeaders?: string[];
+    allowCredentials?: boolean;
+    maxAge?: number;
+    optionsSuccessStatus?: number;
+};
+export type LitoRateLimitOptions = {
+    limit?: number;
+    windowMs?: number;
+    key?: string | ((context: LitoMiddlewareContext) => string);
+    protectedPathPrefixes?: string[];
+    status?: number;
+    retryAfterHeader?: boolean;
+    response?: Response | ((context: LitoMiddlewareContext & {
+        retryAfterSeconds: number;
+    }) => Response | Promise<Response>);
+};
+export type LitoSecurityHeadersOptions = {
+    frameOptions?: string;
+    contentTypeOptions?: string;
+    referrerPolicy?: string;
+    crossOriginOpenerPolicy?: string;
+    crossOriginResourcePolicy?: string;
+    permissionsPolicy?: string;
+    contentSecurityPolicy?: string;
+};
+export type LitoRequestIdOptions = {
+    localKey?: string;
+    headerName?: string;
+    generator?: () => string;
+};
+export type LitoCacheControlOptions = {
+    value?: string;
+    protectedPathPrefixes?: string[];
+};
 export declare function readQuery<Schema extends LitoQuerySchema>(context: Pick<LitoRequestContext, "query">, schema: Schema): LitoParsedQuery<Schema>;
 export declare function defineApiRoute<Params extends Record<string, string> = Record<string, string>, QuerySchema extends LitoQuerySchema | undefined = undefined>(definition: LitoApiRouteDefinition<Params, QuerySchema>): {
     get: LitoApiHandler | undefined;
@@ -141,4 +232,16 @@ export declare function defineApiRoute<Params extends Record<string, string> = R
     delete: LitoApiHandler | undefined;
     options: LitoApiHandler | undefined;
 };
+export declare function createRequestMetaMiddleware(options?: LitoRequestMetaMiddlewareOptions): LitoMiddleware;
+export declare function createAuthGuardMiddleware(options?: LitoAuthGuardMiddlewareOptions): LitoMiddleware;
+export declare function createTimingMiddleware(options?: LitoTimingMiddlewareOptions): LitoMiddleware;
+export declare function createLoggerMiddleware(options?: LitoLoggerMiddlewareOptions): LitoMiddleware;
+export declare function requireAuth(options?: LitoRequireAuthOptions): LitoMiddleware;
+export declare function requireRole(options: LitoRequireRoleOptions): LitoMiddleware;
+export declare function withSecurityHeaders(options?: LitoSecurityHeadersOptions): LitoMiddleware;
+export declare function withRequestId(options?: LitoRequestIdOptions): LitoMiddleware;
+export declare function withCacheControl(options?: LitoCacheControlOptions): LitoMiddleware;
+export declare function withCors(options?: LitoCorsOptions): LitoMiddleware;
+export declare function withRateLimit(options?: LitoRateLimitOptions): LitoMiddleware;
+export declare function composeMiddlewares(...middlewares: Array<LitoMiddleware | false | null | undefined>): LitoMiddleware;
 export declare function createLitoServer(options?: LitoServerOptions): Hono<import("hono/types").BlankEnv, import("hono/types").BlankSchema, "/">;

@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
-const LITOHO_VERSION = "^0.0.4";
+const LITOHO_VERSION = "^0.0.5";
 const LITOHO_SCOPE = process.env.LITOHO_SCOPE?.trim() || "@litoho";
 const LITOHO_CLI_PACKAGE = process.env.LITOHO_CLI_PACKAGE?.trim() || "litoho";
 const LITOHO_CLI_BIN = process.env.LITOHO_CLI_BIN?.trim() || "litoho";
@@ -13,7 +13,13 @@ function scopedPackage(name: string) {
 const APP_PACKAGE = scopedPackage("app");
 const SERVER_PACKAGE = scopedPackage("server");
 
-export function createPageFile(rootDir: string, routePath: string, options: { mode?: "client" | "server" } = {}) {
+export type PageTemplate = "default" | "client-counter" | "server-data" | "api-inspector" | "not-found-demo";
+
+export function createPageFile(
+  rootDir: string,
+  routePath: string,
+  options: { mode?: "client" | "server"; throwDemo?: boolean; template?: PageTemplate } = {}
+) {
   const targetFile = resolve(rootDir, "app/pages", normalizePagePath(routePath));
   ensureParentDirectory(targetFile);
 
@@ -25,7 +31,161 @@ export function createPageFile(rootDir: string, routePath: string, options: { mo
 
   writeFileSync(
     targetFile,
-    `${directive}import { html } from "lit";
+    options.throwDemo
+      ? `${directive}import { html } from "lit";
+import type { LitoPageModule } from "${APP_PACKAGE}";
+
+const page: LitoPageModule = {
+  document: {
+    title: "Error Demo"
+  },
+  load: ({ query }) => {
+    if (query.get("safe") === "1") {
+      return {
+        safe: true
+      };
+    }
+
+    throw new Error("Intentional Litoho demo error from page load().");
+  },
+  render: ({ data }) => html\`
+    <main style="max-width: 760px; margin: 0 auto; padding: 32px;">
+      <h1>Error Demo</h1>
+      <p>The safe branch is active.</p>
+      <pre>\${JSON.stringify(data, null, 2)}</pre>
+    </main>
+  \`
+};
+
+export default page;
+`
+      : options.template === "client-counter"
+        ? `"use client";
+
+import { html } from "lit";
+import type { LitoPageModule } from "${APP_PACKAGE}";
+import { memo, signal } from "${scopedPackage("core")}";
+
+const count = signal(0);
+const doubled = memo(() => count.value * 2);
+
+const page: LitoPageModule = {
+  document: {
+    title: "Client Counter"
+  },
+  render: () => html\`
+    <main style="max-width: 760px; margin: 0 auto; padding: 32px;">
+      <h1>Client Counter</h1>
+      <p>This page is scaffolded with the <code>client-counter</code> template.</p>
+      <div style="display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 20px 0;">
+        <div style="padding: 16px; border-radius: 16px; background: #e2e8f0;">
+          <div style="font-size: 0.8rem; color: #475569;">Count</div>
+          <div style="font-size: 2rem;">\${count.value}</div>
+        </div>
+        <div style="padding: 16px; border-radius: 16px; background: #dbeafe;">
+          <div style="font-size: 0.8rem; color: #475569;">Doubled</div>
+          <div style="font-size: 2rem;">\${doubled.value}</div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 12px;">
+        <button @click=\${() => count.update((value) => value - 1)}>Decrease</button>
+        <button @click=\${() => count.update((value) => value + 1)}>Increase</button>
+      </div>
+    </main>
+  \`
+};
+
+export default page;
+`
+        : options.template === "server-data"
+          ? `${directive || '"use server";\n\n'}import { html } from "lit";
+import type { LitoPageModule } from "${APP_PACKAGE}";
+
+type ServerData = {
+  generatedAt: string;
+  pathname: string;
+  source: string;
+};
+
+const page: LitoPageModule<ServerData> = {
+  document: {
+    title: "Server Data"
+  },
+  load: ({ pathname, query }) => ({
+    generatedAt: new Date().toISOString(),
+    pathname,
+    source: query.get("source") ?? "server"
+  }),
+  render: ({ data }) => html\`
+    <main style="max-width: 760px; margin: 0 auto; padding: 32px;">
+      <h1>Server Data</h1>
+      <p>This page is scaffolded with the <code>server-data</code> template.</p>
+      <pre style="padding: 16px; border-radius: 16px; background: #0f172a; color: #e2e8f0; overflow: auto;">\${JSON.stringify(data, null, 2)}</pre>
+    </main>
+  \`
+};
+
+export default page;
+`
+        : options.template === "api-inspector"
+          ? `"use client";
+
+import { html } from "lit";
+import type { LitoPageModule } from "${APP_PACKAGE}";
+import { signal } from "${scopedPackage("core")}";
+
+const payload = signal("Loading...");
+
+const loadApi = async () => {
+  payload.value = "Loading...";
+
+  try {
+    const response = await fetch("/api/request-info?source=inspector&token=demo-secret");
+    payload.value = JSON.stringify(await response.json(), null, 2);
+  } catch (error) {
+    payload.value = String(error);
+  }
+};
+
+const page: LitoPageModule = {
+  document: {
+    title: "API Inspector"
+  },
+  render: () => html\`
+    <main style="max-width: 760px; margin: 0 auto; padding: 32px;">
+      <h1>API Inspector</h1>
+      <p>This page is scaffolded with the <code>api-inspector</code> template.</p>
+      <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+        <button @click=\${() => void loadApi()}>Fetch /api/request-info</button>
+      </div>
+      <pre style="padding: 16px; border-radius: 16px; background: #0f172a; color: #e2e8f0; overflow: auto;">\${payload.value}</pre>
+    </main>
+  \`
+};
+
+void loadApi();
+
+export default page;
+`
+          : options.template === "not-found-demo"
+            ? `${directive || '"use server";\n\n'}import { html } from "lit";
+import type { LitoPageModule } from "${APP_PACKAGE}";
+
+const page: LitoPageModule = {
+  document: {
+    title: "Not Found Demo"
+  },
+  render: () => html\`
+    <main style="max-width: 760px; margin: 0 auto; padding: 32px;">
+      <h1>Not Found Demo</h1>
+      <p>Open a route that does not exist, such as <a href="/missing-demo-route">/missing-demo-route</a>, to exercise <code>app/pages/_not-found.ts</code>.</p>
+    </main>
+  \`
+};
+
+export default page;
+`
+      : `${directive}import { html } from "lit";
 import type { LitoPageModule } from "${APP_PACKAGE}";
 
 const page: LitoPageModule = {
@@ -90,26 +250,106 @@ export default layout;
   return targetFile;
 }
 
-export function createApiMiddlewareFile(rootDir: string) {
+export type MiddlewareTemplate = "basic" | "logger" | "auth" | "timing" | "cors" | "rate-limit";
+export type MiddlewareStackTemplate = "web" | "api" | "secure-api" | "browser-app";
+
+export function createApiMiddlewareFile(
+  rootDir: string,
+  options: {
+    force?: boolean;
+    template?: MiddlewareTemplate;
+  } = {}
+) {
   const targetFile = resolve(rootDir, "app/api/_middleware.ts");
   ensureParentDirectory(targetFile);
 
-  if (existsSync(targetFile)) {
+  if (existsSync(targetFile) && !options.force) {
     throw new Error(`API middleware already exists: ${targetFile}`);
+  }
+
+  writeFileSync(targetFile, createApiMiddlewareTemplate(options.template ?? "basic"));
+
+  return targetFile;
+}
+
+export function createMiddlewareStackFile(
+  rootDir: string,
+  stack: MiddlewareStackTemplate,
+  options: { force?: boolean } = {}
+) {
+  const targetFile = resolve(rootDir, "app/api/_middleware.ts");
+  ensureParentDirectory(targetFile);
+
+  if (existsSync(targetFile) && !options.force) {
+    throw new Error(`API middleware already exists: ${targetFile}`);
+  }
+
+  writeFileSync(targetFile, createMiddlewareStackTemplate(stack));
+
+  return targetFile;
+}
+
+export function createNotFoundPageFile(rootDir: string, options: { force?: boolean } = {}) {
+  const targetFile = resolve(rootDir, "app/pages/_not-found.ts");
+  ensureParentDirectory(targetFile);
+
+  if (existsSync(targetFile) && !options.force) {
+    throw new Error(`Not-found page already exists: ${targetFile}`);
   }
 
   writeFileSync(
     targetFile,
-    `import type { LitoMiddleware } from "${SERVER_PACKAGE}";
+    `import { html } from "lit";
+import type { LitoNotFoundModule } from "${APP_PACKAGE}";
 
-const middleware: LitoMiddleware = async (context, next) => {
-  context.setLocal("requestId", crypto.randomUUID());
-  context.setLocal("requestedAt", new Date(context.timing.startedAt).toISOString());
-
-  await next();
+const page: LitoNotFoundModule = {
+  document: {
+    title: "Page Not Found"
+  },
+  render: ({ pathname }) => html\`
+    <main style="max-width: 760px; margin: 0 auto; padding: 32px;">
+      <h1>404</h1>
+      <p>No route matched <code>\${pathname}</code>.</p>
+      <p><a href="/">Back to home</a></p>
+    </main>
+  \`
 };
 
-export default middleware;
+export default page;
+`
+  );
+
+  return targetFile;
+}
+
+export function createErrorPageFile(rootDir: string, options: { force?: boolean } = {}) {
+  const targetFile = resolve(rootDir, "app/pages/_error.ts");
+  ensureParentDirectory(targetFile);
+
+  if (existsSync(targetFile) && !options.force) {
+    throw new Error(`Error page already exists: ${targetFile}`);
+  }
+
+  writeFileSync(
+    targetFile,
+    `import { html } from "lit";
+import type { LitoErrorModule } from "${APP_PACKAGE}";
+
+const page: LitoErrorModule = {
+  document: ({ status }) => ({
+    title: \`Server Error \${status}\`
+  }),
+  render: ({ status, error }) => html\`
+    <main style="max-width: 760px; margin: 0 auto; padding: 32px;">
+      <h1>\${status}</h1>
+      <p>Litoho caught a page render failure.</p>
+      <pre style="padding: 16px; border-radius: 16px; background: #0f172a; color: #e2e8f0; overflow: auto;">\${String(error)}</pre>
+      <p><a href="/">Back to home</a></p>
+    </main>
+  \`
+};
+
+export default page;
 `
   );
 
@@ -604,6 +844,199 @@ ${hasQuery ? `  query,\n` : ""}  get: (context) => {
 });
 
 export default route;
+`;
+}
+
+function createApiMiddlewareTemplate(template: MiddlewareTemplate) {
+  if (template === "basic") {
+    return `import { createRequestMetaMiddleware } from "${SERVER_PACKAGE}";
+
+export default createRequestMetaMiddleware();
+`;
+  }
+
+  if (template === "auth") {
+    return `import { requireAuth, unauthorized } from "${SERVER_PACKAGE}";
+
+export default requireAuth({
+  protectedPathPrefixes: ["/docs"],
+  unauthorizedResponse: unauthorized("Unauthorized", {
+    headers: {
+      "content-type": "text/plain; charset=utf-8"
+    }
+  })
+});
+`;
+  }
+
+  if (template === "timing") {
+    return `import { createTimingMiddleware } from "${SERVER_PACKAGE}";
+
+export default createTimingMiddleware();
+`;
+  }
+
+  if (template === "cors") {
+    return `import { withCors } from "${SERVER_PACKAGE}";
+
+export default withCors({
+  allowOrigin: "*",
+  allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+});
+`;
+  }
+
+  if (template === "rate-limit") {
+    return `import { withRateLimit } from "${SERVER_PACKAGE}";
+
+export default withRateLimit({
+  limit: 60,
+  windowMs: 60_000
+});
+`;
+  }
+
+  if (template === "logger") {
+    return `import {
+  composeMiddlewares,
+  createLoggerMiddleware,
+  createRequestMetaMiddleware,
+  createTimingMiddleware
+} from "${SERVER_PACKAGE}";
+
+export default composeMiddlewares(
+  createRequestMetaMiddleware(),
+  createTimingMiddleware(),
+  createLoggerMiddleware()
+);
+`;
+  }
+
+  return `import { createRequestMetaMiddleware } from "${SERVER_PACKAGE}";
+
+export default createRequestMetaMiddleware();
+`;
+}
+
+function createMiddlewareStackTemplate(stack: MiddlewareStackTemplate) {
+  if (stack === "api") {
+    return `import {
+  composeMiddlewares,
+  createAuthGuardMiddleware,
+  createLoggerMiddleware,
+  createRequestMetaMiddleware,
+  createTimingMiddleware,
+  json
+} from "${SERVER_PACKAGE}";
+
+export default composeMiddlewares(
+  createRequestMetaMiddleware(),
+  createAuthGuardMiddleware({
+    protectedPathPrefixes: ["/api"],
+    unauthorizedResponse: json(
+      {
+        ok: false,
+        error: {
+          message: "Unauthorized"
+        }
+      },
+      {
+        status: 401
+      }
+    )
+  }),
+  createTimingMiddleware(),
+  createLoggerMiddleware()
+);
+`;
+  }
+
+  if (stack === "secure-api") {
+    return `import {
+  composeMiddlewares,
+  createLoggerMiddleware,
+  json,
+  requireAuth,
+  withCacheControl,
+  withCors,
+  withRateLimit,
+  withRequestId,
+  withSecurityHeaders
+} from "${SERVER_PACKAGE}";
+
+export default composeMiddlewares(
+  withRequestId(),
+  withSecurityHeaders(),
+  withCors({
+    allowOrigin: "*",
+    allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+  }),
+  requireAuth({
+    protectedPathPrefixes: ["/api"],
+    unauthorizedResponse: json(
+      {
+        ok: false,
+        error: {
+          message: "Unauthorized"
+        }
+      },
+      {
+        status: 401
+      }
+    )
+  }),
+  withRateLimit({
+    protectedPathPrefixes: ["/api"],
+    limit: 120,
+    windowMs: 60_000
+  }),
+  withCacheControl({
+    protectedPathPrefixes: ["/api"],
+    value: "no-store"
+  }),
+  createLoggerMiddleware()
+);
+`;
+  }
+
+  if (stack === "browser-app") {
+    return `import {
+  composeMiddlewares,
+  createLoggerMiddleware,
+  createRequestMetaMiddleware,
+  createTimingMiddleware,
+  withCacheControl,
+  withRequestId,
+  withSecurityHeaders
+} from "${SERVER_PACKAGE}";
+
+export default composeMiddlewares(
+  withRequestId(),
+  createRequestMetaMiddleware(),
+  createTimingMiddleware(),
+  withSecurityHeaders({
+    contentSecurityPolicy: "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'"
+  }),
+  withCacheControl({
+    value: "private, no-store"
+  }),
+  createLoggerMiddleware()
+);
+`;
+  }
+
+  return `import {
+  composeMiddlewares,
+  createLoggerMiddleware,
+  createRequestMetaMiddleware,
+  createTimingMiddleware
+} from "${SERVER_PACKAGE}";
+
+export default composeMiddlewares(
+  createRequestMetaMiddleware(),
+  createTimingMiddleware(),
+  createLoggerMiddleware()
+);
 `;
 }
 

@@ -1,13 +1,32 @@
-import type { LitoMiddleware } from "@litoho/server";
+import {
+  composeMiddlewares,
+  createAuthGuardMiddleware,
+  createLoggerMiddleware,
+  createRequestMetaMiddleware,
+  createTimingMiddleware,
+  json
+} from "@litoho/server";
 
-const middleware: LitoMiddleware = async (context, next) => {
-  context.setLocal("requestId", crypto.randomUUID());
-  context.setLocal("requestedAt", new Date(context.timing.startedAt).toISOString());
-  context.setLocal("source", context.query.get("source") ?? "direct");
-  context.setLocal("visitor", context.getCookie("visitor") ?? "guest");
-  context.setLocal("requestPath", context.pathname);
-
-  await next();
-};
-
-export default middleware;
+export default composeMiddlewares(
+  createRequestMetaMiddleware(),
+  createAuthGuardMiddleware({
+    protectedPathPrefixes: ["/docs"],
+    createError: () => new Error("Unauthorized demo request. Try /docs/trace?token=demo-secret")
+  }),
+  createAuthGuardMiddleware({
+    protectedPathPrefixes: ["/api/secure-data"],
+    unauthorizedResponse: json(
+      {
+        ok: false,
+        error: {
+          message: "Unauthorized"
+        }
+      },
+      {
+        status: 401
+      }
+    )
+  }),
+  createTimingMiddleware(),
+  createLoggerMiddleware()
+);

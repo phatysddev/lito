@@ -2,7 +2,7 @@
 
 Litoho is an experimental full-stack framework built around Lit, file-based routing, SSR, and a small package-first architecture.
 
-This README reflects the `0.0.4` milestone: the first usable monorepo snapshot with a working CLI, page routing, server rendering, client-only pages, typed API routes, and playground apps.
+This README reflects the `0.0.5` milestone: the first usable monorepo snapshot with a working CLI, page routing, server rendering, client-only pages, typed API routes, playground apps, and CLI-first examples.
 
 ## What Litoho Is
 
@@ -14,7 +14,7 @@ Litoho is aiming for a simple mental model:
 - use one Node server for SSR pages, APIs, and Vite in development
 - keep the framework split into focused packages instead of one large runtime
 
-## 0.0.4 Features
+## 0.0.5 Features
 
 - Lit-based full-stack app model
 - File-based page routing from `app/pages`
@@ -44,10 +44,35 @@ playgrounds/
   demo-app/
   demo-hydration/
   demo-state/
+  demo-middleware/
+
+examples/
+  basic-routing/
+  state-patterns/
+  crud-resource/
+  middleware-lab/
+  browser-app/
 
 planning/
   PLANNING.md
 ```
+
+## Examples
+
+The `examples/` folder is a CLI-first showcase for the current Litoho feature set.
+
+- `examples/basic-routing`
+  Nested routes, route params, layouts, SSR pages, `_not-found`, and `_error`
+- `examples/state-patterns`
+  `"use client"` pages, `signal()`/`memo()` state, and typed query APIs
+- `examples/crud-resource`
+  Resource scaffolding, collection/detail pages, typed API query parsing, and SSR dashboard pages
+- `examples/middleware-lab`
+  Middleware stacks, auth/security helpers, request inspection, error handling, and protected APIs
+- `examples/browser-app`
+  Browser-oriented middleware preset, docs-style nested layouts, and client interactions
+
+See [examples/README.md](/Users/yodsaveesupachoktanasap/Desktop/lito/examples/README.md) for the CLI commands used to scaffold them.
 
 ## Package Overview
 
@@ -161,9 +186,22 @@ Generated apps include:
 - `server.ts`
 - `vite.config.ts`
 
+## Publishing
+
+Release helpers are available from the repo root:
+
+```bash
+pnpm run release:preflight
+pnpm run identity:preview
+pnpm run release:pack
+pnpm run release:publish
+```
+
+The full release guide is in [docs/PUBLISHING.md](/Users/yodsaveesupachoktanasap/Desktop/lito/docs/PUBLISHING.md).
+
 ## CLI
 
-Main commands available in `0.0.4`:
+Main commands available in `0.0.5`:
 
 ```bash
 litoho new <name>
@@ -238,7 +276,7 @@ export default defineApiRoute({
 
 ## Current Status
 
-`0.0.4` is still an early framework snapshot. The core developer flow works, but the project is still evolving and some conventions may tighten as Litoho moves toward a more stable release.
+`0.0.5` is still an early framework snapshot. The core developer flow works, but the project is still evolving and some conventions may tighten as Litoho moves toward a more stable release.
 
 Things that are already solid enough to explore:
 

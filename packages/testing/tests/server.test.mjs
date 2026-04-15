@@ -1,6 +1,24 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createLitoServer, defineApiRoute } from "../../server/dist/index.js";
+import {
+  badRequest,
+  createLitoServer,
+  defineApiRoute,
+  forbidden,
+  html,
+  json,
+  methodNotAllowed,
+  notFound,
+  redirect,
+  requireAuth,
+  requireRole,
+  unauthorized,
+  withCacheControl,
+  withCors,
+  withRequestId,
+  withSecurityHeaders,
+  withRateLimit
+} from "../../server/dist/index.js";
 
 test("createLitoServer renders SSR pages with middleware-provided request locals", async () => {
   const logs = [];
@@ -174,4 +192,317 @@ test("defineApiRoute passes typed query data into API handlers", async () => {
       tag: ["a", "b"]
     }
   });
+});
+
+test("createLitoServer short-circuits page requests with redirect and unauthorized responses", async () => {
+  const app = createLitoServer({
+    appName: "Litoho Test",
+    middlewares: [
+      (context, next) => {
+        if (context.pathname === "/private") {
+          return redirect("http://litoho.test/login");
+        }
+
+        if (context.pathname === "/members") {
+          return unauthorized("members only", {
+            headers: {
+              "content-type": "text/plain; charset=utf-8"
+            }
+          });
+        }
+
+        return next();
+      }
+    ],
+    pages: [
+      {
+        id: "login",
+        path: "/login",
+        render: () => "login"
+      },
+      {
+        id: "private",
+        path: "/private",
+        render: () => "private page body should not render"
+      },
+      {
+        id: "members",
+        path: "/members",
+        render: () => "members page body should not render"
+      }
+    ]
+  });
+
+  const redirectResponse = await app.fetch(new Request("http://litoho.test/private"));
+  const unauthorizedResponse = await app.fetch(new Request("http://litoho.test/members"));
+  const unauthorizedBody = await unauthorizedResponse.text();
+
+  assert.equal(redirectResponse.status, 302);
+  assert.equal(redirectResponse.headers.get("location"), "http://litoho.test/login");
+  assert.equal(unauthorizedResponse.status, 401);
+  assert.equal(unauthorizedBody, "members only");
+});
+
+test("createLitoServer short-circuits API requests with JSON 401 responses", async () => {
+  const app = createLitoServer({
+    appName: "Litoho Test",
+    middlewares: [
+      (context, next) => {
+        if (context.pathname === "/api/secure" && context.query.get("token") !== "demo-secret") {
+          return json(
+            {
+              ok: false,
+              error: {
+                message: "Unauthorized"
+              }
+            },
+            {
+              status: 401
+            }
+          );
+        }
+
+        return next();
+      }
+    ],
+    apiRoutes: [
+      {
+        id: "api:secure",
+        path: "/api/secure",
+        ...defineApiRoute({
+          get: () =>
+            Response.json({
+              ok: true,
+              secret: "demo"
+            })
+        })
+      }
+    ]
+  });
+
+  const deniedResponse = await app.fetch(new Request("http://litoho.test/api/secure"));
+  const deniedBody = await deniedResponse.json();
+  const allowedResponse = await app.fetch(new Request("http://litoho.test/api/secure?token=demo-secret"));
+  const allowedBody = await allowedResponse.json();
+
+  assert.equal(deniedResponse.status, 401);
+  assert.deepEqual(deniedBody, {
+    ok: false,
+    error: {
+      message: "Unauthorized"
+    }
+  });
+  assert.equal(allowedResponse.status, 200);
+  assert.deepEqual(allowedBody, {
+    ok: true,
+    secret: "demo"
+  });
+});
+
+test("server response helpers create expected statuses and headers", async () => {
+  const badRequestResponse = badRequest("bad input");
+  const notFoundResponse = notFound("missing");
+  const methodNotAllowedResponse = methodNotAllowed("nope");
+  const forbiddenResponse = forbidden("forbidden");
+  const unauthorizedResponse = unauthorized("unauthorized");
+  const htmlResponse = html("<h1>Hello</h1>");
+  const redirectResponse = redirect("http://litoho.test/next");
+  const jsonResponse = json({ ok: true }, { status: 202 });
+
+  assert.equal(badRequestResponse.status, 400);
+  assert.equal(await badRequestResponse.text(), "bad input");
+  assert.equal(notFoundResponse.status, 404);
+  assert.equal(await notFoundResponse.text(), "missing");
+  assert.equal(methodNotAllowedResponse.status, 405);
+  assert.equal(await methodNotAllowedResponse.text(), "nope");
+  assert.equal(forbiddenResponse.status, 403);
+  assert.equal(await forbiddenResponse.text(), "forbidden");
+  assert.equal(unauthorizedResponse.status, 401);
+  assert.equal(await unauthorizedResponse.text(), "unauthorized");
+  assert.equal(htmlResponse.status, 200);
+  assert.equal(htmlResponse.headers.get("content-type"), "text/html; charset=utf-8");
+  assert.equal(await htmlResponse.text(), "<h1>Hello</h1>");
+  assert.equal(redirectResponse.status, 302);
+  assert.equal(redirectResponse.headers.get("location"), "http://litoho.test/next");
+  assert.equal(jsonResponse.status, 202);
+  assert.deepEqual(await jsonResponse.json(), { ok: true });
+});
+
+test("requireAuth and requireRole short-circuit protected routes", async () => {
+  const app = createLitoServer({
+    appName: "Litoho Test",
+    middlewares: [
+      (context, next) => {
+        context.setLocal("auth.role", context.query.get("role"));
+        return next();
+      },
+      requireAuth({
+        protectedPathPrefixes: ["/protected"],
+        expectedToken: "demo-secret"
+      }),
+      requireRole({
+        protectedPathPrefixes: ["/admin"],
+        requiredRoles: ["admin"],
+        forbiddenResponse: forbidden("admin only")
+      })
+    ],
+    pages: [
+      {
+        id: "protected",
+        path: "/protected",
+        render: () => "protected"
+      },
+      {
+        id: "admin",
+        path: "/admin",
+        render: () => "admin"
+      }
+    ]
+  });
+
+  const deniedAuth = await app.fetch(new Request("http://litoho.test/protected"));
+  const allowedAuth = await app.fetch(new Request("http://litoho.test/protected?token=demo-secret"));
+  const deniedRole = await app.fetch(new Request("http://litoho.test/admin?role=editor"));
+  const allowedRole = await app.fetch(new Request("http://litoho.test/admin?role=admin"));
+
+  assert.equal(deniedAuth.status, 401);
+  assert.equal(await deniedAuth.text(), "Unauthorized");
+  assert.equal(allowedAuth.status, 200);
+  assert.equal(deniedRole.status, 403);
+  assert.equal(await deniedRole.text(), "admin only");
+  assert.equal(allowedRole.status, 200);
+});
+
+test("withCors adds headers and handles OPTIONS preflight", async () => {
+  const app = createLitoServer({
+    appName: "Litoho Test",
+    middlewares: [
+      withCors({
+        allowOrigin: ["https://example.com"],
+        allowHeaders: ["content-type", "x-custom"],
+        exposeHeaders: ["x-trace-id"],
+        allowCredentials: true,
+        maxAge: 600
+      })
+    ],
+    apiRoutes: [
+      {
+        id: "api:cors",
+        path: "/api/cors",
+        ...defineApiRoute({
+          get: () =>
+            json(
+              {
+                ok: true
+              },
+              {
+                headers: {
+                  "x-trace-id": "trace-1"
+                }
+              }
+            )
+        })
+      }
+    ]
+  });
+
+  const preflight = await app.fetch(
+    new Request("http://litoho.test/api/cors", {
+      method: "OPTIONS",
+      headers: {
+        origin: "https://example.com"
+      }
+    })
+  );
+  const actual = await app.fetch(
+    new Request("http://litoho.test/api/cors", {
+      headers: {
+        origin: "https://example.com"
+      }
+    })
+  );
+
+  assert.equal(preflight.status, 204);
+  assert.equal(preflight.headers.get("access-control-allow-origin"), "https://example.com");
+  assert.equal(actual.status, 200);
+  assert.equal(actual.headers.get("access-control-allow-origin"), "https://example.com");
+  assert.equal(actual.headers.get("access-control-allow-credentials"), "true");
+  assert.equal(actual.headers.get("access-control-expose-headers"), "x-trace-id");
+});
+
+test("withRateLimit short-circuits requests after the configured limit", async () => {
+  const app = createLitoServer({
+    appName: "Litoho Test",
+    middlewares: [
+      withRateLimit({
+        limit: 1,
+        windowMs: 60_000,
+        key: "demo-rate-limit"
+      })
+    ],
+    apiRoutes: [
+      {
+        id: "api:rate",
+        path: "/api/rate",
+        ...defineApiRoute({
+          get: () =>
+            json({
+              ok: true
+            })
+        })
+      }
+    ]
+  });
+
+  const first = await app.fetch(new Request("http://litoho.test/api/rate"));
+  const second = await app.fetch(new Request("http://litoho.test/api/rate"));
+  const secondBody = await second.json();
+
+  assert.equal(first.status, 200);
+  assert.equal(second.status, 429);
+  assert.equal(second.headers.get("retry-after"), "60");
+  assert.deepEqual(secondBody, {
+    ok: false,
+    error: {
+      message: "Too Many Requests"
+    }
+  });
+});
+
+test("withSecurityHeaders, withRequestId, and withCacheControl decorate downstream responses", async () => {
+  const app = createLitoServer({
+    appName: "Litoho Test",
+    middlewares: [
+      withRequestId({
+        generator: () => "req-fixed"
+      }),
+      withSecurityHeaders({
+        contentSecurityPolicy: "default-src 'self'"
+      }),
+      withCacheControl({
+        value: "private, max-age=60"
+      })
+    ],
+    apiRoutes: [
+      {
+        id: "api:headers",
+        path: "/api/headers",
+        ...defineApiRoute({
+          get: () =>
+            json({
+              ok: true
+            })
+        })
+      }
+    ]
+  });
+
+  const response = await app.fetch(new Request("http://litoho.test/api/headers"));
+
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("x-request-id"), "req-fixed");
+  assert.equal(response.headers.get("x-frame-options"), "DENY");
+  assert.equal(response.headers.get("x-content-type-options"), "nosniff");
+  assert.equal(response.headers.get("content-security-policy"), "default-src 'self'");
+  assert.equal(response.headers.get("cache-control"), "private, max-age=60");
 });

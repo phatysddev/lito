@@ -7,6 +7,9 @@ type InspectorPageData = {
   source: string;
   visitor: string;
   requestPath: string;
+  isAuthenticated: boolean;
+  guard: string;
+  durationMs: number | null;
 };
 
 const page: LitoPageModule<InspectorPageData> = {
@@ -18,7 +21,10 @@ const page: LitoPageModule<InspectorPageData> = {
     requestedAt: getLocal<string>("requestedAt") ?? "missing",
     source: getLocal<string>("source") ?? "unknown",
     visitor: getLocal<string>("visitor") ?? "guest",
-    requestPath: getLocal<string>("requestPath") ?? pathname
+    requestPath: getLocal<string>("requestPath") ?? pathname,
+    isAuthenticated: Boolean(getLocal("auth.isAuthenticated")),
+    guard: getLocal<string>("auth.guard") ?? "none",
+    durationMs: (getLocal<number>("timing.durationMs") ?? null) as number | null
   }),
   render: ({ data, headers, query }) => html`
     <main style="max-width: 980px; margin: 0 auto; padding: 32px;">
