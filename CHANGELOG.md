@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.8 - 2026-04-15
+
+- Release 0.0.8
+- Version bump from 0.0.7
+
 ## 0.0.7 - 2026-04-15
 
 - Release 0.0.7
