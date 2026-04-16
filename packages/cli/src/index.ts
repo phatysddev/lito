@@ -8,6 +8,7 @@ import { generateRouteManifests } from "./generate-route-manifests.js";
 import { expandUiSelection, UI_COMPONENT_REGISTRY, UI_PRESET_REGISTRY } from "./ui-registry.js";
 import {
   addUiComponentsToProject,
+  createComponentFile,
   createApiMiddlewareFile,
   createApiFile,
   createCrudResource,
@@ -92,11 +93,15 @@ async function handleGenerateCommand(commandArgs: string[]) {
   const params = readRepeatedFlagValues(commandArgs, "--params");
   const queryFields = readQueryFlags(commandArgs);
   const templateValue = readFlagValue(commandArgs, "--template");
+  const tagValue = readFlagValue(commandArgs, "--tag");
+  const pageValue = readFlagValue(commandArgs, "--page");
   const isCsr = commandArgs.includes("--csr");
   const isSsr = commandArgs.includes("--ssr");
   const force = commandArgs.includes("--force");
   let filteredArgs = stripRepeatedFlag(stripRepeatedFlag(commandArgs, "--params"), "--query");
   filteredArgs = stripFlag(filteredArgs, "--template");
+  filteredArgs = stripFlag(filteredArgs, "--tag");
+  filteredArgs = stripFlag(filteredArgs, "--page");
   filteredArgs = stripBooleanFlag(filteredArgs, "--csr");
   filteredArgs = stripBooleanFlag(filteredArgs, "--ssr");
   filteredArgs = stripBooleanFlag(filteredArgs, "--force");
@@ -121,6 +126,21 @@ async function handleGenerateCommand(commandArgs: string[]) {
           template: parsePageTemplate(templateValue)
         })}`
       );
+      return;
+    case "component":
+      if (!generatePath && !pageValue) {
+        throw new Error("Usage: litoho generate component [path] [--tag <name>] [--page <route>] [--root <dir>]");
+      }
+      {
+        const componentPath = generatePath ?? pageValue!;
+        const result = createComponentFile(projectRoot, componentPath, {
+          tag: tagValue,
+          page: pageValue
+        });
+        console.log(
+          `Created component at ${result.targetFile} (${result.tagName})${result.pageFile ? ` and imported into ${result.pageFile}` : ""}`
+        );
+      }
       return;
     case "api":
       if (!generatePath) {
@@ -512,6 +532,9 @@ Usage:
   litoho a ui <component...> [--copy] [--dir <path>] [--file <path>] [--root <dir>]
   litoho generate routes [--root <dir>]
   litoho g routes [--root <dir>]
+  litoho generate component [path] [--tag <name>] [--page <route>] [--root <dir>]
+  litoho g component [path] [--tag <name>] [--page <route>] [--root <dir>]
+  litoho g c [path] [--tag <name>] [--page <route>] [--root <dir>]
   litoho generate page <path> [--params <name[,name2]>] [--ssr] [--csr] [--throw-demo] [--template <client-counter|server-data|api-inspector|not-found-demo>] [--root <dir>]
   litoho -g page <path> [--params <name[,name2]>] [--ssr] [--csr] [--throw-demo] [--template <client-counter|server-data|api-inspector|not-found-demo>] [--root <dir>]
   litoho g p <path> [--params <name[,name2]>] [--ssr] [--csr] [--throw-demo] [--template <client-counter|server-data|api-inspector|not-found-demo>] [--root <dir>]
@@ -542,6 +565,10 @@ Examples:
   litoho ui add overlay --copy
   litoho ui upgrade
   litoho ui upgrade overlay --force
+  litoho g c hero/banner
+  litoho g c marketing/pricing-card --tag marketing-pricing-card
+  litoho g c hero/banner --page landing
+  litoho g c --page profile/card
   litoho ui add badge button card
   litoho ui add dialog tabs --copy
   litoho add ui dialog --file app/pages/admin/_layout.ts
@@ -657,6 +684,9 @@ function buildRoutePath(basePath: string, params: string[]) {
 
 function normalizeGenerateTarget(value: string | undefined) {
   switch (value) {
+    case "component":
+    case "c":
+      return "component";
     case "p":
       return "page";
     case "a":

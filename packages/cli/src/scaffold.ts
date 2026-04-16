@@ -44,6 +44,107 @@ export type UpgradeLocalUiComponentsResult = {
 
 export type PageTemplate = "default" | "client-counter" | "server-data" | "api-inspector" | "not-found-demo";
 
+export function createComponentFile(
+  rootDir: string,
+  componentPath: string,
+  options: {
+    tag?: string;
+    page?: string;
+  } = {}
+) {
+  const normalizedComponentPath = stripSlashes(componentPath).replace(/\.ts$/, "");
+
+  if (normalizedComponentPath === "") {
+    throw new Error("Component path is required.");
+  }
+
+  const targetFile = resolve(rootDir, "src/components", `${normalizedComponentPath}.ts`);
+  ensureParentDirectory(targetFile);
+
+  if (existsSync(targetFile)) {
+    throw new Error(`Component already exists: ${targetFile}`);
+  }
+
+  const className = toIdentifier(titleCase(normalizedComponentPath)) || "AppComponent";
+  const tagName = options.tag?.trim() || createComponentTagName(normalizedComponentPath);
+  const pageFile = options.page ? resolve(rootDir, "app/pages", normalizePagePath(options.page)) : undefined;
+
+  writeFileSync(
+    targetFile,
+    `import { css, html } from "lit";
+import { LitoElement, defineComponent } from "${scopedPackage("core")}";
+
+export class ${className} extends LitoElement {
+  static properties = {
+    title: { type: String }
+  };
+
+  static styles = css\`
+    :host {
+      display: block;
+    }
+
+    .component {
+      padding: 1rem;
+      border-radius: 1rem;
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      background: rgba(15, 23, 42, 0.72);
+      color: #f8fafc;
+    }
+
+    h2 {
+      margin: 0 0 0.5rem;
+      font-size: 1.125rem;
+      line-height: 1.2;
+    }
+
+    p {
+      margin: 0;
+      color: #cbd5e1;
+      line-height: 1.6;
+    }
+  \`;
+
+  declare title: string;
+
+  constructor() {
+    super();
+    this.title = "${titleCase(normalizedComponentPath.split("/").pop() ?? normalizedComponentPath)}";
+  }
+
+  render() {
+    return html\`
+      <section class="component">
+        <h2>\${this.title}</h2>
+        <p>Edit ${escapeTemplateLiteral(targetFile)} to build your Lit component.</p>
+        <slot></slot>
+      </section>
+    \`;
+  }
+}
+
+defineComponent("${tagName}", ${className});
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "${tagName}": ${className};
+  }
+}
+`
+  );
+
+  if (pageFile) {
+    ensureComponentImportInPage(pageFile, targetFile);
+  }
+
+  return {
+    targetFile,
+    tagName,
+    className,
+    pageFile
+  };
+}
+
 export function createPageFile(
   rootDir: string,
   routePath: string,
@@ -389,6 +490,7 @@ export function createNewApp(rootDir: string) {
   const appName = rootDir.split(/[/\\]/).pop() ?? "litoho-app";
   mkdirSync(resolve(rootDir, "app/pages"), { recursive: true });
   mkdirSync(resolve(rootDir, "app/api"), { recursive: true });
+  mkdirSync(resolve(rootDir, "src/components"), { recursive: true });
   mkdirSync(resolve(rootDir, "src/generated"), { recursive: true });
   mkdirSync(resolve(rootDir, "src"), { recursive: true });
 
@@ -1084,6 +1186,39 @@ export default layout;
   writeFileSync(targetFile, `${missingStatements.join("\n")}\n${currentSource}`);
 }
 
+function ensureComponentImportInPage(pageFile: string, componentFile: string) {
+  if (!existsSync(pageFile)) {
+    throw new Error(`Page does not exist: ${pageFile}`);
+  }
+
+  const importPath = toImportSpecifier(relative(dirname(pageFile), componentFile));
+  ensureImportStatementsAfterDirectives(pageFile, [`import "${importPath}";`]);
+}
+
+function ensureImportStatementsAfterDirectives(targetFile: string, statements: string[]) {
+  const uniqueStatements = [...new Set(statements)];
+  const currentSource = readFileSync(targetFile, "utf8");
+  const missingStatements = uniqueStatements.filter((statement) => !currentSource.includes(statement));
+
+  if (missingStatements.length === 0) {
+    return;
+  }
+
+  const lines = currentSource.split("\n");
+  let insertAt = 0;
+
+  while (insertAt < lines.length && /^["']use (client|server)["'];$/.test(lines[insertAt].trim())) {
+    insertAt += 1;
+  }
+
+  while (insertAt < lines.length && lines[insertAt].trim() === "") {
+    insertAt += 1;
+  }
+
+  lines.splice(insertAt, 0, ...missingStatements, "");
+  writeFileSync(targetFile, lines.join("\n"));
+}
+
 function ensureLocalUiComponents(rootDir: string, componentNames: LuiComponentName[], copyDir: string) {
   const copiedFiles = new Set<string>();
   const fileSet = resolveUiLocalFileSet(rootDir, componentNames, copyDir);
@@ -1269,6 +1404,11 @@ function stripSlashes(value: string) {
   return value.replace(/^\/+|\/+$/g, "");
 }
 
+function toImportSpecifier(value: string) {
+  const normalized = value.replace(/\\/g, "/");
+  return normalized.startsWith(".") ? normalized : `./${normalized}`;
+}
+
 function escapeTemplateLiteral(value: string) {
   return value.replace(/\\/g, "\\\\").replace(/`/g, "\\`");
 }
@@ -1279,6 +1419,16 @@ function titleCase(value: string) {
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
+}
+
+function createComponentTagName(componentPath: string) {
+  const normalized = stripSlashes(componentPath)
+    .split("/")
+    .filter(Boolean)
+    .map((segment) => segment.replace(/[^a-zA-Z0-9]+/g, "-").replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase())
+    .join("-");
+
+  return normalized.startsWith("app-") ? normalized : `app-${normalized}`;
 }
 
 function overwriteFile(filePath: string, content: string) {

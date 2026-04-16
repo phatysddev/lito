@@ -128,6 +128,43 @@ pnpm exec litoho g p server-snapshot --template server-data
 pnpm exec litoho g p failure-lab --throw-demo
 ```
 
+### `litoho generate component [path]`
+
+สร้าง Lit component ใต้ `src/components`
+
+flags:
+
+- `--tag <custom-element-name>`
+- `--page <route>`
+- `--root <dir>`
+
+aliases:
+
+- `litoho g component ...`
+- `litoho g c ...`
+
+ตัวอย่าง:
+
+```bash
+pnpm exec litoho g c hero/banner
+pnpm exec litoho g c marketing/pricing-card --tag marketing-pricing-card
+pnpm exec litoho g c hero/banner --page landing
+pnpm exec litoho g c --page profile/card
+```
+
+ผลลัพธ์ตัวอย่าง:
+
+```text
+src/components/hero/banner.ts
+```
+
+component ที่สร้างจะ:
+
+- extend จาก `LitoElement`
+- register custom element ให้อัตโนมัติผ่าน `defineComponent()`
+- ตั้ง tag name แบบ convention เช่น `app-hero-banner`
+- ถ้าใส่ `--page` จะเพิ่ม import เข้า `app/pages/<route>/_index.ts` ให้อัตโนมัติ
+
 ### `litoho generate api <path>`
 
 สร้าง API route ใต้ `app/api`
