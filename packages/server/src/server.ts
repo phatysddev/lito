@@ -81,6 +81,7 @@ export type LitoServerOptions = {
   appName?: string;
   clientAssets?: LitoClientAssets;
   staticRoot?: string;
+  publicRoot?: string;
   pages?: LitoPageRoute[];
   apiRoutes?: LitoApiRoute[];
   notFoundPage?: LitoNotFoundPage;
@@ -833,8 +834,43 @@ export function createLitoServer(options: LitoServerOptions = {}) {
   const env = options.env ?? process.env;
   const logger = options.logger;
 
-  if (options.staticRoot) {
-    app.use("/assets/*", serveStatic({ root: options.staticRoot }));
+  const servePublicAsset = options.publicRoot
+    ? serveStatic({
+        root: options.publicRoot,
+        rewriteRequestPath: normalizeStaticAssetPath
+      })
+    : undefined;
+  const serveBuiltAsset = options.staticRoot
+    ? serveStatic({
+        root: options.staticRoot,
+        rewriteRequestPath: normalizeStaticAssetPath
+      })
+    : undefined;
+
+  if (servePublicAsset || serveBuiltAsset) {
+    app.use("*", async (context, next) => {
+      if (!shouldServeStaticAsset(context.req.path)) {
+        return next();
+      }
+
+      if (servePublicAsset) {
+        await servePublicAsset(context, async () => undefined);
+
+        if (context.finalized) {
+          return;
+        }
+      }
+
+      if (serveBuiltAsset) {
+        await serveBuiltAsset(context, async () => undefined);
+
+        if (context.finalized) {
+          return;
+        }
+      }
+
+      return next();
+    });
   }
 
   registerApiRoutes(app, {
@@ -878,6 +914,18 @@ export function createLitoServer(options: LitoServerOptions = {}) {
   );
 
   return app;
+}
+
+function shouldServeStaticAsset(pathname: string) {
+  if (pathname === "/") {
+    return false;
+  }
+
+  return pathname.startsWith("/assets/") || pathname.split("/").some((segment) => segment.includes("."));
+}
+
+function normalizeStaticAssetPath(pathname: string) {
+  return pathname.replace(/^\/+/, "");
 }
 
 function registerApiRoutes(

@@ -53,6 +53,7 @@ export type LitoServerOptions = {
     appName?: string;
     clientAssets?: LitoClientAssets;
     staticRoot?: string;
+    publicRoot?: string;
     pages?: LitoPageRoute[];
     apiRoutes?: LitoApiRoute[];
     notFoundPage?: LitoNotFoundPage;

@@ -1,4 +1,5 @@
 import { createServer as createNodeServer } from "node:http";
+import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { getRequestListener } from "@hono/node-server";
 import type { Server as NodeHttpServer } from "node:http";
@@ -41,6 +42,7 @@ export async function startLitoNodeApp(options: LitoNodeAppOptions = {}): Promis
   const isProduction = mode === "production";
   const rootDir = options.rootDir ?? process.cwd();
   const distRoot = resolve(rootDir, "dist");
+  const publicRoot = resolve(rootDir, "public");
   const manifestPath = resolve(distRoot, "manifest.json");
   let vite: ViteDevServer | undefined;
 
@@ -52,6 +54,7 @@ export async function startLitoNodeApp(options: LitoNodeAppOptions = {}): Promis
         })
       : createDevClientAssets(options.clientEntry),
     staticRoot: isProduction ? distRoot : undefined,
+    publicRoot: existsSync(publicRoot) ? publicRoot : undefined,
     pages: options.pages,
     apiRoutes: options.apiRoutes,
     notFoundPage: options.notFoundPage,
