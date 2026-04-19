@@ -91,6 +91,7 @@ async function main() {
 
 async function handleGenerateCommand(commandArgs: string[]) {
   const params = readRepeatedFlagValues(commandArgs, "--params");
+  const withUi = readRepeatedFlagValues(commandArgs, "--with-ui");
   const queryFields = readQueryFlags(commandArgs);
   const templateValue = readFlagValue(commandArgs, "--template");
   const tagValue = readFlagValue(commandArgs, "--tag");
@@ -99,6 +100,7 @@ async function handleGenerateCommand(commandArgs: string[]) {
   const isSsr = commandArgs.includes("--ssr");
   const force = commandArgs.includes("--force");
   let filteredArgs = stripRepeatedFlag(stripRepeatedFlag(commandArgs, "--params"), "--query");
+  filteredArgs = stripRepeatedFlag(filteredArgs, "--with-ui");
   filteredArgs = stripFlag(filteredArgs, "--template");
   filteredArgs = stripFlag(filteredArgs, "--tag");
   filteredArgs = stripFlag(filteredArgs, "--page");
@@ -129,13 +131,16 @@ async function handleGenerateCommand(commandArgs: string[]) {
       return;
     case "component":
       if (!generatePath && !pageValue) {
-        throw new Error("Usage: litoho generate component [path] [--tag <name>] [--page <route>] [--root <dir>]");
+        throw new Error(
+          "Usage: litoho generate component [path] [--tag <name>] [--page <route>] [--with-ui <name[,name2]>] [--root <dir>]"
+        );
       }
       {
         const componentPath = generatePath ?? pageValue!;
         const result = createComponentFile(projectRoot, componentPath, {
           tag: tagValue,
-          page: pageValue
+          page: pageValue,
+          withUi
         });
         console.log(
           `Created component at ${result.targetFile} (${result.tagName})${result.pageFile ? ` and imported into ${result.pageFile}` : ""}`
@@ -532,9 +537,9 @@ Usage:
   litoho a ui <component...> [--copy] [--dir <path>] [--file <path>] [--root <dir>]
   litoho generate routes [--root <dir>]
   litoho g routes [--root <dir>]
-  litoho generate component [path] [--tag <name>] [--page <route>] [--root <dir>]
-  litoho g component [path] [--tag <name>] [--page <route>] [--root <dir>]
-  litoho g c [path] [--tag <name>] [--page <route>] [--root <dir>]
+  litoho generate component [path] [--tag <name>] [--page <route>] [--with-ui <name[,name2]>] [--root <dir>]
+  litoho g component [path] [--tag <name>] [--page <route>] [--with-ui <name[,name2]>] [--root <dir>]
+  litoho g c [path] [--tag <name>] [--page <route>] [--with-ui <name[,name2]>] [--root <dir>]
   litoho generate page <path> [--params <name[,name2]>] [--ssr] [--csr] [--throw-demo] [--template <client-counter|server-data|api-inspector|not-found-demo>] [--root <dir>]
   litoho -g page <path> [--params <name[,name2]>] [--ssr] [--csr] [--throw-demo] [--template <client-counter|server-data|api-inspector|not-found-demo>] [--root <dir>]
   litoho g p <path> [--params <name[,name2]>] [--ssr] [--csr] [--throw-demo] [--template <client-counter|server-data|api-inspector|not-found-demo>] [--root <dir>]
@@ -569,6 +574,7 @@ Examples:
   litoho g c marketing/pricing-card --tag marketing-pricing-card
   litoho g c hero/banner --page landing
   litoho g c --page profile/card
+  litoho g c profile/card --with-ui button,card
   litoho ui add badge button card
   litoho ui add dialog tabs --copy
   litoho add ui dialog --file app/pages/admin/_layout.ts

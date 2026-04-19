@@ -136,6 +136,7 @@ flags:
 
 - `--tag <custom-element-name>`
 - `--page <route>`
+- `--with-ui <name[,name2]>`
 - `--root <dir>`
 
 aliases:
@@ -150,6 +151,7 @@ pnpm exec litoho g c hero/banner
 pnpm exec litoho g c marketing/pricing-card --tag marketing-pricing-card
 pnpm exec litoho g c hero/banner --page landing
 pnpm exec litoho g c --page profile/card
+pnpm exec litoho g c profile/card --with-ui button,card
 ```
 
 ผลลัพธ์ตัวอย่าง:
@@ -163,7 +165,8 @@ component ที่สร้างจะ:
 - extend จาก `LitoElement`
 - register custom element ให้อัตโนมัติผ่าน `defineComponent()`
 - ตั้ง tag name แบบ convention เช่น `app-hero-banner`
-- ถ้าใส่ `--page` จะเพิ่ม import เข้า `app/pages/<route>/_index.ts` ให้อัตโนมัติ
+- ถ้าใส่ `--page` จะเพิ่ม import เข้า `app/pages/<route>/_index.ts` และแทรก usage snippet ใน `render()` ให้อัตโนมัติ
+- ถ้าใส่ `--with-ui` จะ import `@litoho/ui` component ที่ระบุและ scaffold markup เริ่มต้นให้
 
 ### `litoho generate api <path>`
 

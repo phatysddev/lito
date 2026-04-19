@@ -50,6 +50,7 @@ export function createComponentFile(
   options: {
     tag?: string;
     page?: string;
+    withUi?: string[];
   } = {}
 ) {
   const normalizedComponentPath = stripSlashes(componentPath).replace(/\.ts$/, "");
@@ -68,11 +69,15 @@ export function createComponentFile(
   const className = toIdentifier(titleCase(normalizedComponentPath)) || "AppComponent";
   const tagName = options.tag?.trim() || createComponentTagName(normalizedComponentPath);
   const pageFile = options.page ? resolve(rootDir, "app/pages", normalizePagePath(options.page)) : undefined;
+  const componentTitle = titleCase(normalizedComponentPath) || "New Component";
+  const uiComponents = (options.withUi ?? []).map(normalizeUiComponentName);
+  const uiImportBlock =
+    uiComponents.length > 0 ? `${uiComponents.map((name) => `import "${UI_PACKAGE}/${UI_COMPONENT_MODULES[name]}";`).join("\n")}\n` : "";
 
   writeFileSync(
     targetFile,
     `import { css, html } from "lit";
-import { LitoElement, defineComponent } from "${scopedPackage("core")}";
+${uiImportBlock}import { LitoElement, defineComponent } from "${scopedPackage("core")}";
 
 export class ${className} extends LitoElement {
   static properties = {
@@ -109,17 +114,11 @@ export class ${className} extends LitoElement {
 
   constructor() {
     super();
-    this.title = "${titleCase(normalizedComponentPath.split("/").pop() ?? normalizedComponentPath)}";
+    this.title = "${componentTitle}";
   }
 
   render() {
-    return html\`
-      <section class="component">
-        <h2>\${this.title}</h2>
-        <p>Edit ${escapeTemplateLiteral(targetFile)} to build your Lit component.</p>
-        <slot></slot>
-      </section>
-    \`;
+    return html\`${createComponentRenderMarkup(uiComponents, escapeTemplateLiteral(targetFile))}\`;
   }
 }
 
@@ -133,8 +132,12 @@ declare global {
 `
   );
 
+  if (uiComponents.length > 0) {
+    ensureUiDependency(rootDir);
+  }
+
   if (pageFile) {
-    ensureComponentImportInPage(pageFile, targetFile);
+    ensureComponentLinkedInPage(pageFile, targetFile, tagName, componentTitle);
   }
 
   return {
@@ -1186,13 +1189,14 @@ export default layout;
   writeFileSync(targetFile, `${missingStatements.join("\n")}\n${currentSource}`);
 }
 
-function ensureComponentImportInPage(pageFile: string, componentFile: string) {
+function ensureComponentLinkedInPage(pageFile: string, componentFile: string, tagName: string, title: string) {
   if (!existsSync(pageFile)) {
     throw new Error(`Page does not exist: ${pageFile}`);
   }
 
   const importPath = toImportSpecifier(relative(dirname(pageFile), componentFile));
   ensureImportStatementsAfterDirectives(pageFile, [`import "${importPath}";`]);
+  ensureComponentSnippetInPage(pageFile, tagName, title);
 }
 
 function ensureImportStatementsAfterDirectives(targetFile: string, statements: string[]) {
@@ -1217,6 +1221,30 @@ function ensureImportStatementsAfterDirectives(targetFile: string, statements: s
 
   lines.splice(insertAt, 0, ...missingStatements, "");
   writeFileSync(targetFile, lines.join("\n"));
+}
+
+function ensureComponentSnippetInPage(pageFile: string, tagName: string, title: string) {
+  const currentSource = readFileSync(pageFile, "utf8");
+
+  if (currentSource.includes(`<${tagName}`)) {
+    return;
+  }
+
+  const renderTemplateMarker = "html`";
+  const renderTemplateIndex = currentSource.indexOf(renderTemplateMarker);
+
+  if (renderTemplateIndex < 0) {
+    throw new Error(`Could not inject component usage into page: ${pageFile}`);
+  }
+
+  const snippet = `
+    <${tagName} title="${escapeHtmlAttribute(title)}">
+      <p>Component scaffolded by Litoho in src/components.</p>
+    </${tagName}>
+    `;
+
+  const insertAt = renderTemplateIndex + renderTemplateMarker.length;
+  writeFileSync(pageFile, `${currentSource.slice(0, insertAt)}${snippet}${currentSource.slice(insertAt)}`);
 }
 
 function ensureLocalUiComponents(rootDir: string, componentNames: LuiComponentName[], copyDir: string) {
@@ -1409,6 +1437,10 @@ function toImportSpecifier(value: string) {
   return normalized.startsWith(".") ? normalized : `./${normalized}`;
 }
 
+function escapeHtmlAttribute(value: string) {
+  return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+}
+
 function escapeTemplateLiteral(value: string) {
   return value.replace(/\\/g, "\\\\").replace(/`/g, "\\`");
 }
@@ -1429,6 +1461,50 @@ function createComponentTagName(componentPath: string) {
     .join("-");
 
   return normalized.startsWith("app-") ? normalized : `app-${normalized}`;
+}
+
+function createComponentRenderMarkup(uiComponents: LuiComponentName[], targetFile: string) {
+  const componentNotice = `Edit ${targetFile} to build your Lit component.`;
+  const hasCard = uiComponents.includes("card");
+  const hasButton = uiComponents.includes("button");
+
+  if (hasCard) {
+    return `
+      <lui-card class="component">
+        <lui-card-header>
+          <lui-card-title>\${this.title}</lui-card-title>
+          <lui-card-description>${componentNotice}</lui-card-description>
+        </lui-card-header>
+        <lui-card-content>
+          <div style="display: grid; gap: 0.75rem;">
+            <slot></slot>
+            ${hasButton ? `<lui-button>Primary action</lui-button>` : ""}
+          </div>
+        </lui-card-content>
+      </lui-card>
+    `;
+  }
+
+  if (hasButton) {
+    return `
+      <section class="component">
+        <h2>\${this.title}</h2>
+        <p>${componentNotice}</p>
+        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+          <lui-button>Primary action</lui-button>
+          <slot></slot>
+        </div>
+      </section>
+    `;
+  }
+
+  return `
+      <section class="component">
+        <h2>\${this.title}</h2>
+        <p>${componentNotice}</p>
+        <slot></slot>
+      </section>
+    `;
 }
 
 function overwriteFile(filePath: string, content: string) {

@@ -33,6 +33,12 @@ pnpm exec litoho g c hero/banner --page profile/card
 pnpm exec litoho g c --page profile/card
 ```
 
+สร้าง component พร้อม compose กับ `@litoho/ui` ตั้งแต่เริ่ม:
+
+```bash
+pnpm exec litoho g c profile/card --with-ui button,card
+```
+
 คำสั่งสุดท้ายจะสร้าง:
 
 ```text
@@ -44,6 +50,8 @@ src/components/profile/card.ts
 ```text
 app/pages/profile/card/_index.ts
 ```
+
+พร้อมแทรก usage snippet ลงใน `render()` ของ page ให้อัตโนมัติด้วย
 
 ## โครงสร้างที่แนะนำ
 
@@ -77,6 +85,7 @@ CLI จะสร้าง component ที่:
 - ใช้ `html` และ `css` จาก `lit`
 - register ตัวเองผ่าน `defineComponent()`
 - มี `slot` ไว้ให้ compose ต่อได้
+- ถ้าใช้ `--with-ui` จะ import UI modules ที่ต้องใช้และ scaffold markup ชุดแรกให้เลย
 
 ตัวอย่าง:
 
@@ -302,6 +311,7 @@ pnpm exec litoho g c hero/banner
 pnpm exec litoho g c hero/banner --tag marketing-hero
 pnpm exec litoho g c hero/banner --page landing
 pnpm exec litoho g c --page profile/card
+pnpm exec litoho g c profile/card --with-ui button,card
 ```
 
 ## สรุป
