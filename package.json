@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.10",
   "description": "Litoho monorepo scaffold",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/phatysddev/litoho.git"

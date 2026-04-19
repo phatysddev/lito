@@ -306,4 +306,4 @@ The working roadmap lives in [planning/PLANNING.md](/Users/yodsaveesupachoktanas
 
 ## License
 
-No license has been added yet.
+MIT License. See [LICENSE](./LICENSE).

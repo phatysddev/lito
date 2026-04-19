@@ -2,6 +2,7 @@
   "name": "@litoho/router",
   "version": "0.0.10",
   "type": "module",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/phatysddev/litoho.git",
