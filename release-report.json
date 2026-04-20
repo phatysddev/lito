@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-20T12:54:02.382Z",
+  "generatedAt": "2026-04-20T12:54:34.314Z",
   "steps": {
     "preflight": {
       "status": "passed",
@@ -206,7 +206,7 @@
           "error": "Command failed: npm publish --cache /tmp/litoho-npm-cache --access public --dry-run"
         }
       ],
-      "updatedAt": "2026-04-20T12:54:02.381Z"
+      "updatedAt": "2026-04-20T12:54:34.313Z"
     }
   },
   "status": "failed"
