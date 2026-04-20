@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0 - 2026-04-20
+
+- Release 0.1.0
+- Version bump from 0.0.12
+
 ## 0.0.12 - 2026-04-19
 
 - Release 0.0.12

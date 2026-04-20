@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-20T12:54:34.314Z",
+  "generatedAt": "2026-04-20T12:56:07.492Z",
   "steps": {
     "preflight": {
       "status": "passed",
@@ -13,7 +13,7 @@
           "dir": "packages/router",
           "currentName": "@litoho/router",
           "publishName": "@litoho/router",
-          "version": "0.0.12",
+          "version": "0.1.0",
           "distFiles": {
             "dist/index.js": true,
             "dist/index.d.ts": true
@@ -23,7 +23,7 @@
           "dir": "packages/core",
           "currentName": "@litoho/core",
           "publishName": "@litoho/core",
-          "version": "0.0.12",
+          "version": "0.1.0",
           "distFiles": {
             "dist/index.js": true,
             "dist/index.d.ts": true
@@ -33,7 +33,7 @@
           "dir": "packages/ui",
           "currentName": "@litoho/ui",
           "publishName": "@litoho/ui",
-          "version": "0.0.12",
+          "version": "0.1.0",
           "distFiles": {
             "dist/index.js": true,
             "dist/index.d.ts": true
@@ -43,7 +43,7 @@
           "dir": "packages/server",
           "currentName": "@litoho/server",
           "publishName": "@litoho/server",
-          "version": "0.0.12",
+          "version": "0.1.0",
           "distFiles": {
             "dist/index.js": true,
             "dist/index.d.ts": true
@@ -53,7 +53,7 @@
           "dir": "packages/app",
           "currentName": "@litoho/app",
           "publishName": "@litoho/app",
-          "version": "0.0.12",
+          "version": "0.1.0",
           "distFiles": {
             "dist/index.js": true,
             "dist/index.d.ts": true
@@ -63,7 +63,7 @@
           "dir": "packages/cli",
           "currentName": "litoho",
           "publishName": "litoho",
-          "version": "0.0.12",
+          "version": "0.1.0",
           "distFiles": {
             "dist/index.js": true,
             "dist/index.d.ts": true
@@ -73,10 +73,10 @@
       ],
       "checks": {
         "cliScaffoldVersion": {
-          "packageVersion": "0.0.12",
-          "sourceVersion": "^0.0.12",
-          "distVersion": "^0.0.12",
-          "expected": "^0.0.12"
+          "packageVersion": "0.1.0",
+          "sourceVersion": "^0.1.0",
+          "distVersion": "^0.1.0",
+          "expected": "^0.1.0"
         },
         "publicAssetSupport": [
           {
@@ -129,28 +129,29 @@
           }
         ]
       },
-      "updatedAt": "2026-04-20T12:52:53.109Z"
+      "updatedAt": "2026-04-20T12:56:05.563Z"
     },
     "smoke": {
-      "status": "passed",
-      "mode": "local",
+      "status": "failed",
+      "mode": "published",
       "scope": "@litoho",
       "cliPackageName": "litoho",
       "packageManager": "npm",
       "appName": "demo-app",
-      "install": false,
-      "build": false,
-      "start": false,
-      "generatedFilesVerified": true,
-      "versionSyncVerified": true,
-      "routeManifestVerified": true,
+      "install": true,
+      "build": true,
+      "start": true,
+      "generatedFilesVerified": false,
+      "versionSyncVerified": false,
+      "routeManifestVerified": false,
       "startProbeVerified": false,
       "expectedVersion": "^0.0.12",
-      "updatedAt": "2026-04-20T12:52:53.224Z"
+      "updatedAt": "2026-04-20T12:56:07.486Z",
+      "error": "Generated app is missing required files:\n- public/robots.txt\n- public/logo.svg"
     },
     "verify": {
-      "status": "passed",
-      "published": false,
+      "status": "failed",
+      "published": true,
       "skipTest": false,
       "steps": [
         {
@@ -165,25 +166,27 @@
         },
         {
           "name": "smoke",
-          "status": "passed",
+          "status": "failed",
           "command": "node",
           "args": [
             "scripts/smoke-new-app.mjs",
+            "--published",
+            "--install",
+            "--build",
+            "--start",
+            "--scope",
+            "@litoho",
+            "--cli-package",
+            "litoho",
+            "--report",
+            "/Users/yodsaveesupachoktanasap/Desktop/lito/release-report.json",
             "--report",
             "/Users/yodsaveesupachoktanasap/Desktop/lito/release-report.json"
           ]
-        },
-        {
-          "name": "test",
-          "status": "passed",
-          "command": "pnpm",
-          "args": [
-            "test"
-          ]
         }
       ],
-      "error": "Command failed: pnpm test",
-      "updatedAt": "2026-04-20T12:52:54.101Z"
+      "error": "Command failed: node scripts/smoke-new-app.mjs --published --install --build --start --scope @litoho --cli-package litoho --report /Users/yodsaveesupachoktanasap/Desktop/lito/release-report.json --report /Users/yodsaveesupachoktanasap/Desktop/lito/release-report.json",
+      "updatedAt": "2026-04-20T12:56:07.492Z"
     },
     "publish": {
       "status": "failed",
