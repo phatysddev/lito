@@ -1,5 +1,6 @@
 import { Hono } from "hono";
-import { serveStatic } from "@hono/node-server/serve-static";
+import { existsSync, readFileSync, statSync } from "node:fs";
+import { resolve as resolvePath } from "node:path";
 import { render } from "@lit-labs/ssr";
 import { collectResult } from "@lit-labs/ssr/lib/render-result.js";
 import { resolveRoute } from "@litoho/router";
@@ -835,39 +836,24 @@ export function createLitoServer(options: LitoServerOptions = {}) {
   const env = options.env ?? process.env;
   const logger = options.logger;
 
-  const servePublicAsset = options.publicRoot
-    ? serveStatic({
-        root: options.publicRoot,
-        rewriteRequestPath: normalizeStaticAssetPath
-      })
-    : undefined;
-  const serveBuiltAsset = options.staticRoot
-    ? serveStatic({
-        root: options.staticRoot,
-        rewriteRequestPath: normalizeStaticAssetPath
-      })
-    : undefined;
-
-  if (servePublicAsset || serveBuiltAsset) {
+  if (options.publicRoot || options.staticRoot) {
     app.use("*", async (context, next) => {
       if (!shouldServeStaticAsset(context.req.path)) {
         return next();
       }
 
-      if (servePublicAsset) {
-        await servePublicAsset(context, async () => undefined);
-
-        if (context.finalized) {
-          return;
-        }
+      const publicAssetResponse = options.publicRoot
+        ? createStaticAssetResponse(options.publicRoot, context.req.path)
+        : undefined;
+      if (publicAssetResponse) {
+        return publicAssetResponse;
       }
 
-      if (serveBuiltAsset) {
-        await serveBuiltAsset(context, async () => undefined);
-
-        if (context.finalized) {
-          return;
-        }
+      const builtAssetResponse = options.staticRoot
+        ? createStaticAssetResponse(options.staticRoot, context.req.path)
+        : undefined;
+      if (builtAssetResponse) {
+        return builtAssetResponse;
       }
 
       return next();
@@ -925,8 +911,65 @@ function shouldServeStaticAsset(pathname: string) {
   return pathname.startsWith("/assets/") || pathname.split("/").some((segment) => segment.includes("."));
 }
 
-function normalizeStaticAssetPath(pathname: string) {
-  return pathname.replace(/^\/+/, "");
+function createStaticAssetResponse(root: string, pathname: string) {
+  const normalizedRelativePath = pathname.replace(/^\/+/, "");
+  const filePath = resolvePath(root, normalizedRelativePath);
+  const rootPath = resolvePath(root);
+
+  if (!filePath.startsWith(rootPath)) {
+    return undefined;
+  }
+
+  if (!existsSync(filePath)) {
+    return undefined;
+  }
+
+  const fileStat = statSync(filePath);
+  if (!fileStat.isFile()) {
+    return undefined;
+  }
+
+  return new Response(readFileSync(filePath), {
+    headers: {
+      "content-type": resolveContentType(filePath),
+      "content-length": String(fileStat.size)
+    }
+  });
+}
+
+function resolveContentType(filePath: string) {
+  const extension = filePath.split(".").pop()?.toLowerCase();
+
+  switch (extension) {
+    case "js":
+    case "mjs":
+      return "text/javascript; charset=utf-8";
+    case "css":
+      return "text/css; charset=utf-8";
+    case "html":
+      return "text/html; charset=utf-8";
+    case "json":
+      return "application/json; charset=utf-8";
+    case "txt":
+      return "text/plain; charset=utf-8";
+    case "xml":
+      return "application/xml; charset=utf-8";
+    case "svg":
+      return "image/svg+xml";
+    case "png":
+      return "image/png";
+    case "jpg":
+    case "jpeg":
+      return "image/jpeg";
+    case "gif":
+      return "image/gif";
+    case "webp":
+      return "image/webp";
+    case "ico":
+      return "image/x-icon";
+    default:
+      return "application/octet-stream";
+  }
 }
 
 function registerApiRoutes(
@@ -977,9 +1020,48 @@ function registerApiRoutes(
             context: requestContext,
             kind: "api",
             middlewares: input.middlewares,
-            routeId: route.id
+            routeId: route.id,
+            finalNext: async () => handler(requestContext)
           });
-          const response = middlewareResponse ?? (await handler(requestContext));
+          const response = middlewareResponse ?? createApiErrorResponse(new Error("Litoho API pipeline returned no response."));
+          finalizeRequestTiming(requestContext);
+          await input.logger?.onRequestComplete?.({
+            ...loggerContext,
+            response
+          });
+          return response;
+        } catch (error) {
+          finalizeRequestTiming(requestContext);
+          await input.logger?.onRequestError?.({
+            ...loggerContext,
+            error,
+            status: 500
+          });
+          return createApiErrorResponse(error);
+        }
+      });
+    }
+
+    if (!route.options) {
+      app.options(route.path, async (context) => {
+        const requestContext = createRequestContext({
+          env: input.env,
+          params: context.req.param(),
+          pathname: new URL(context.req.raw.url).pathname,
+          request: context.req.raw
+        });
+        const loggerContext = createLoggerContext(requestContext, "api", route.id);
+
+        try {
+          await input.logger?.onRequestStart?.(loggerContext);
+          const response =
+            (await runMiddlewares({
+              context: requestContext,
+              kind: "api",
+              middlewares: input.middlewares,
+              routeId: route.id,
+              finalNext: async () => methodNotAllowed()
+            })) ?? methodNotAllowed();
           finalizeRequestTiming(requestContext);
           await input.logger?.onRequestComplete?.({
             ...loggerContext,
@@ -1034,31 +1116,37 @@ async function handlePageRequest(input: {
     const middlewareResponse = await runMiddlewares({
       context: requestContext,
       kind: "page",
-      middlewares: input.middlewares
+      middlewares: input.middlewares,
+      finalNext: async () =>
+        input.notFoundPage
+          ? await renderNotFoundPage({
+              appName: input.appName,
+              clientAssets: input.clientAssets,
+              context: requestContext,
+              page: input.notFoundPage
+            })
+          : new Response("Not Found", {
+              status: 404,
+              headers: {
+                "content-type": "text/plain; charset=utf-8"
+              }
+            })
     });
-
-    if (middlewareResponse) {
-      finalizeRequestTiming(requestContext);
-      await input.logger?.onRequestComplete?.({
-        ...loggerContext,
-        response: middlewareResponse
-      });
-      return middlewareResponse;
-    }
-
-    const response = input.notFoundPage
-      ? await renderNotFoundPage({
-          appName: input.appName,
-          clientAssets: input.clientAssets,
-          context: requestContext,
-          page: input.notFoundPage
-        })
-      : new Response("Not Found", {
-          status: 404,
-          headers: {
-            "content-type": "text/plain; charset=utf-8"
-          }
-        });
+    const response =
+      middlewareResponse ??
+      (input.notFoundPage
+        ? await renderNotFoundPage({
+            appName: input.appName,
+            clientAssets: input.clientAssets,
+            context: requestContext,
+            page: input.notFoundPage
+          })
+        : new Response("Not Found", {
+            status: 404,
+            headers: {
+              "content-type": "text/plain; charset=utf-8"
+            }
+          }));
 
     finalizeRequestTiming(requestContext);
     await input.logger?.onRequestComplete?.({
@@ -1076,24 +1164,23 @@ async function handlePageRequest(input: {
       context: requestContext,
       kind: "page",
       middlewares: input.middlewares,
-      routeId: resolvedRoute.route.id
+      routeId: resolvedRoute.route.id,
+      finalNext: async () =>
+        renderMatchedPage({
+          appName: input.appName,
+          clientAssets: input.clientAssets,
+          context: requestContext,
+          route: resolvedRoute.route
+        })
     });
-
-    if (middlewareResponse) {
-      finalizeRequestTiming(requestContext);
-      await input.logger?.onRequestComplete?.({
-        ...loggerContext,
-        response: middlewareResponse
-      });
-      return middlewareResponse;
-    }
-
-    const response = await renderMatchedPage({
-      appName: input.appName,
-      clientAssets: input.clientAssets,
-      context: requestContext,
-      route: resolvedRoute.route
-    });
+    const response =
+      middlewareResponse ??
+      (await renderMatchedPage({
+        appName: input.appName,
+        clientAssets: input.clientAssets,
+        context: requestContext,
+        route: resolvedRoute.route
+      }));
     finalizeRequestTiming(requestContext);
     await input.logger?.onRequestComplete?.({
       ...loggerContext,
@@ -1320,6 +1407,7 @@ async function runMiddlewares(input: {
   kind: "page" | "api";
   middlewares: readonly LitoMiddleware[];
   routeId?: string;
+  finalNext?: () => Promise<Response | undefined>;
 }) {
   let currentIndex = -1;
 
@@ -1332,7 +1420,7 @@ async function runMiddlewares(input: {
     const middleware = input.middlewares[index];
 
     if (!middleware) {
-      return undefined;
+      return input.finalNext ? input.finalNext() : undefined;
     }
 
     const result = await middleware(
