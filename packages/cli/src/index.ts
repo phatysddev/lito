@@ -462,19 +462,25 @@ async function runDevCommand(cwd: string) {
 }
 
 function createManifestWatchers(cwd: string) {
-  const watchTargets = ["app/pages", "app/api", "src/generated", "server.ts"]
+  const watchTargets = ["app/pages", "app/api"]
     .map((relativePath) => resolve(cwd, relativePath))
     .filter((path) => existsSync(path));
-  let suppressGeneratedUntil = 0;
+  const debug = process.env.LITOHO_DEV_DEBUG === "true";
 
   return watchTargets.map((target) => {
     let timeout: NodeJS.Timeout | undefined;
+    let lastFilename = "";
+    let lastEventType = "";
 
-    const watcher = watch(target, { recursive: true }, () => {
-      if (target.endsWith("/src/generated") || target.endsWith("\\src\\generated")) {
-        if (Date.now() < suppressGeneratedUntil) {
-          return;
-        }
+    const watcher = watch(target, { recursive: true }, (eventType, filename) => {
+      lastFilename = typeof filename === "string" ? filename : "";
+      lastEventType = eventType;
+
+      if (debug) {
+        const changedPath = lastFilename === "" ? target : resolve(target, lastFilename);
+        console.log(
+          `[litoho dev debug] watch event=${eventType} target=${target} changed=${changedPath}`
+        );
       }
 
       if (timeout) {
@@ -483,8 +489,10 @@ function createManifestWatchers(cwd: string) {
 
       timeout = setTimeout(() => {
         try {
-          logManifestGeneration("update", target);
-          suppressGeneratedUntil = Date.now() + 250;
+          logManifestGeneration("update", target, {
+            eventType: lastEventType,
+            filename: lastFilename
+          });
           generateRouteManifests(cwd);
         } catch (error) {
           console.error("[litoho dev] Failed to regenerate route manifests.");
@@ -503,7 +511,14 @@ function createManifestWatchers(cwd: string) {
   });
 }
 
-function logManifestGeneration(kind: "initial" | "update", target?: string) {
+function logManifestGeneration(
+  kind: "initial" | "update",
+  target?: string,
+  details?: {
+    eventType?: string;
+    filename?: string;
+  }
+) {
   const timestamp = new Date().toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
@@ -516,7 +531,14 @@ function logManifestGeneration(kind: "initial" | "update", target?: string) {
     return;
   }
 
-  console.log(`[litoho dev ${timestamp}] regenerated route manifests from ${target}`);
+  const detailSuffix =
+    details?.filename && details.filename !== ""
+      ? ` event=${details.eventType ?? "change"} file=${details.filename}`
+      : details?.eventType
+        ? ` event=${details.eventType}`
+        : "";
+
+  console.log(`[litoho dev ${timestamp}] regenerated route manifests from ${target}${detailSuffix}`);
 }
 
 function printHelp() {
