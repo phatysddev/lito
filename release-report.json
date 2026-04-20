@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-20T12:49:28.201Z",
+  "generatedAt": "2026-04-20T12:54:02.382Z",
   "steps": {
     "preflight": {
       "status": "passed",
@@ -129,7 +129,7 @@
           }
         ]
       },
-      "updatedAt": "2026-04-20T12:49:25.749Z"
+      "updatedAt": "2026-04-20T12:52:53.109Z"
     },
     "smoke": {
       "status": "passed",
@@ -146,10 +146,10 @@
       "routeManifestVerified": true,
       "startProbeVerified": false,
       "expectedVersion": "^0.0.12",
-      "updatedAt": "2026-04-20T12:49:25.875Z"
+      "updatedAt": "2026-04-20T12:52:53.224Z"
     },
     "verify": {
-      "status": "failed",
+      "status": "passed",
       "published": false,
       "skipTest": false,
       "steps": [
@@ -175,7 +175,7 @@
         },
         {
           "name": "test",
-          "status": "failed",
+          "status": "passed",
           "command": "pnpm",
           "args": [
             "test"
@@ -183,7 +183,30 @@
         }
       ],
       "error": "Command failed: pnpm test",
-      "updatedAt": "2026-04-20T12:49:28.200Z"
+      "updatedAt": "2026-04-20T12:52:54.101Z"
+    },
+    "publish": {
+      "status": "failed",
+      "releaseVersion": "0.0.12",
+      "autoBump": false,
+      "autoGit": false,
+      "dryRun": true,
+      "skipVerify": false,
+      "verifyPublished": false,
+      "bumpTarget": "patch",
+      "scope": "@litoho",
+      "cliPackageName": "litoho",
+      "cliBin": "litoho",
+      "packages": [
+        {
+          "name": "@litoho/router",
+          "dir": "packages/router",
+          "status": "failed",
+          "dryRun": true,
+          "error": "Command failed: npm publish --cache /tmp/litoho-npm-cache --access public --dry-run"
+        }
+      ],
+      "updatedAt": "2026-04-20T12:54:02.381Z"
     }
   },
   "status": "failed"
