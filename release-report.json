@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-20T13:00:44.559Z",
+  "generatedAt": "2026-04-20T13:01:09.198Z",
   "steps": {
     "preflight": {
       "status": "passed",
@@ -141,14 +141,15 @@
       "install": true,
       "build": true,
       "start": true,
-      "generatedFilesVerified": false,
-      "versionSyncVerified": false,
-      "routeManifestVerified": false,
+      "generatedFilesVerified": true,
+      "versionSyncVerified": true,
+      "routeManifestVerified": true,
       "startProbeVerified": false,
-      "expectedVersion": "^0.1.0",
-      "updatedAt": "2026-04-20T12:58:17.143Z",
-      "error": "Command failed: npx -y litoho@0.1.1 new demo-app",
-      "cliVersion": "0.1.1"
+      "expectedVersion": "^0.1.1",
+      "updatedAt": "2026-04-20T13:01:09.191Z",
+      "error": "Command failed: npm install",
+      "publishedRetryCount": 12,
+      "publishedRetryDelayMs": 10000
     },
     "verify": {
       "status": "failed",
@@ -171,23 +172,20 @@
           "command": "node",
           "args": [
             "scripts/smoke-new-app.mjs",
+            "--",
             "--published",
             "--install",
             "--build",
             "--start",
             "--scope",
             "@litoho",
-            "--cli-package",
-            "litoho",
-            "--cli-version",
-            "0.1.1",
             "--report",
             "/Users/yodsaveesupachoktanasap/Desktop/lito/release-report.json"
           ]
         }
       ],
-      "error": "Command failed: node scripts/smoke-new-app.mjs --published --install --build --start --scope @litoho --cli-package litoho --cli-version 0.1.1 --report /Users/yodsaveesupachoktanasap/Desktop/lito/release-report.json",
-      "updatedAt": "2026-04-20T12:58:17.149Z"
+      "error": "Command failed: node scripts/smoke-new-app.mjs -- --published --install --build --start --scope @litoho --report /Users/yodsaveesupachoktanasap/Desktop/lito/release-report.json",
+      "updatedAt": "2026-04-20T13:01:09.198Z"
     },
     "publish": {
       "status": "failed",
