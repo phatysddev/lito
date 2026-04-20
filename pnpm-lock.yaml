@@ -21,21 +21,21 @@ importers:
   examples/basic-routing:
     dependencies:
       '@litoho/app':
-        specifier: ^0.0.12
-        version: 0.0.12(@types/node@22.19.17)(lightningcss@1.32.0)
+        specifier: ^0.1.2
+        version: 0.1.2(@types/node@22.19.17)(lightningcss@1.32.0)
       '@litoho/core':
-        specifier: ^0.0.12
-        version: 0.0.12
+        specifier: ^0.1.2
+        version: 0.1.2
       '@litoho/server':
-        specifier: ^0.0.12
-        version: 0.0.12(@types/node@22.19.17)(lightningcss@1.32.0)
+        specifier: ^0.1.2
+        version: 0.1.2(@types/node@22.19.17)(lightningcss@1.32.0)
       lit:
         specifier: ^3.2.0
         version: 3.3.2
     devDependencies:
       litoho:
-        specifier: ^0.0.12
-        version: 0.0.12
+        specifier: ^0.1.2
+        version: 0.1.2
       tsx:
         specifier: ^4.19.2
         version: 4.21.0
@@ -49,21 +49,21 @@ importers:
   examples/browser-app:
     dependencies:
       '@litoho/app':
-        specifier: ^0.0.12
-        version: 0.0.12(@types/node@22.19.17)(lightningcss@1.32.0)
+        specifier: ^0.1.2
+        version: 0.1.2(@types/node@22.19.17)(lightningcss@1.32.0)
       '@litoho/core':
-        specifier: ^0.0.12
-        version: 0.0.12
+        specifier: ^0.1.2
+        version: 0.1.2
       '@litoho/server':
-        specifier: ^0.0.12
-        version: 0.0.12(@types/node@22.19.17)(lightningcss@1.32.0)
+        specifier: ^0.1.2
+        version: 0.1.2(@types/node@22.19.17)(lightningcss@1.32.0)
       lit:
         specifier: ^3.2.0
         version: 3.3.2
     devDependencies:
       litoho:
-        specifier: ^0.0.12
-        version: 0.0.12
+        specifier: ^0.1.2
+        version: 0.1.2
       tsx:
         specifier: ^4.19.2
         version: 4.21.0
@@ -77,21 +77,21 @@ importers:
   examples/crud-resource:
     dependencies:
       '@litoho/app':
-        specifier: ^0.0.12
-        version: 0.0.12(@types/node@22.19.17)(lightningcss@1.32.0)
+        specifier: ^0.1.2
+        version: 0.1.2(@types/node@22.19.17)(lightningcss@1.32.0)
       '@litoho/core':
-        specifier: ^0.0.12
-        version: 0.0.12
+        specifier: ^0.1.2
+        version: 0.1.2
       '@litoho/server':
-        specifier: ^0.0.12
-        version: 0.0.12(@types/node@22.19.17)(lightningcss@1.32.0)
+        specifier: ^0.1.2
+        version: 0.1.2(@types/node@22.19.17)(lightningcss@1.32.0)
       lit:
         specifier: ^3.2.0
         version: 3.3.2
     devDependencies:
       litoho:
-        specifier: ^0.0.12
-        version: 0.0.12
+        specifier: ^0.1.2
+        version: 0.1.2
       tsx:
         specifier: ^4.19.2
         version: 4.21.0
@@ -105,21 +105,21 @@ importers:
   examples/fullstack-crud:
     dependencies:
       '@litoho/app':
-        specifier: ^0.0.12
-        version: 0.0.12(@types/node@22.19.17)(lightningcss@1.32.0)
+        specifier: ^0.1.2
+        version: 0.1.2(@types/node@22.19.17)(lightningcss@1.32.0)
       '@litoho/core':
-        specifier: ^0.0.12
-        version: 0.0.12
+        specifier: ^0.1.2
+        version: 0.1.2
       '@litoho/server':
-        specifier: ^0.0.12
-        version: 0.0.12(@types/node@22.19.17)(lightningcss@1.32.0)
+        specifier: ^0.1.2
+        version: 0.1.2(@types/node@22.19.17)(lightningcss@1.32.0)
       lit:
         specifier: ^3.2.0
         version: 3.3.2
     devDependencies:
       litoho:
-        specifier: ^0.0.12
-        version: 0.0.12
+        specifier: ^0.1.2
+        version: 0.1.2
       tsx:
         specifier: ^4.19.2
         version: 4.21.0
@@ -133,21 +133,21 @@ importers:
   examples/middleware-lab:
     dependencies:
       '@litoho/app':
-        specifier: ^0.0.12
-        version: 0.0.12(@types/node@22.19.17)(lightningcss@1.32.0)
+        specifier: ^0.1.2
+        version: 0.1.2(@types/node@22.19.17)(lightningcss@1.32.0)
       '@litoho/core':
-        specifier: ^0.0.12
-        version: 0.0.12
+        specifier: ^0.1.2
+        version: 0.1.2
       '@litoho/server':
-        specifier: ^0.0.12
-        version: 0.0.12(@types/node@22.19.17)(lightningcss@1.32.0)
+        specifier: ^0.1.2
+        version: 0.1.2(@types/node@22.19.17)(lightningcss@1.32.0)
       lit:
         specifier: ^3.2.0
         version: 3.3.2
     devDependencies:
       litoho:
-        specifier: ^0.0.12
-        version: 0.0.12
+        specifier: ^0.1.2
+        version: 0.1.2
       tsx:
         specifier: ^4.19.2
         version: 4.21.0
@@ -161,21 +161,21 @@ importers:
   examples/state-patterns:
     dependencies:
       '@litoho/app':
-        specifier: ^0.0.12
-        version: 0.0.12(@types/node@22.19.17)(lightningcss@1.32.0)
+        specifier: ^0.1.2
+        version: 0.1.2(@types/node@22.19.17)(lightningcss@1.32.0)
       '@litoho/core':
-        specifier: ^0.0.12
-        version: 0.0.12
+        specifier: ^0.1.2
+        version: 0.1.2
       '@litoho/server':
-        specifier: ^0.0.12
-        version: 0.0.12(@types/node@22.19.17)(lightningcss@1.32.0)
+        specifier: ^0.1.2
+        version: 0.1.2(@types/node@22.19.17)(lightningcss@1.32.0)
       lit:
         specifier: ^3.2.0
         version: 3.3.2
     devDependencies:
       litoho:
-        specifier: ^0.0.12
-        version: 0.0.12
+        specifier: ^0.1.2
+        version: 0.1.2
       tsx:
         specifier: ^4.19.2
         version: 4.21.0
@@ -189,17 +189,17 @@ importers:
   examples/ui-showcase:
     dependencies:
       '@litoho/app':
-        specifier: ^0.0.12
-        version: 0.0.12(@types/node@22.19.17)(lightningcss@1.32.0)
+        specifier: ^0.1.2
+        version: 0.1.2(@types/node@22.19.17)(lightningcss@1.32.0)
       '@litoho/core':
-        specifier: ^0.0.12
-        version: 0.0.12
+        specifier: ^0.1.2
+        version: 0.1.2
       '@litoho/server':
-        specifier: ^0.0.12
-        version: 0.0.12(@types/node@22.19.17)(lightningcss@1.32.0)
+        specifier: ^0.1.2
+        version: 0.1.2(@types/node@22.19.17)(lightningcss@1.32.0)
       '@litoho/ui':
-        specifier: ^0.0.12
-        version: 0.0.12
+        specifier: ^0.1.2
+        version: 0.1.2
       lit:
         specifier: ^3.2.0
         version: 3.3.2
@@ -208,8 +208,8 @@ importers:
         specifier: ^4.1.11
         version: 4.2.2(vite@5.4.21(@types/node@22.19.17)(lightningcss@1.32.0))
       litoho:
-        specifier: ^0.0.12
-        version: 0.0.12
+        specifier: ^0.1.2
+        version: 0.1.2
       tailwindcss:
         specifier: ^4.1.11
         version: 4.2.2
@@ -226,13 +226,17 @@ importers:
   packages/app:
     dependencies:
       '@litoho/server':
-        specifier: ^0.0.12
-        version: 0.0.12(@types/node@22.19.17)(lightningcss@1.32.0)
+        specifier: ^0.1.2
+        version: 0.1.2(@types/node@22.19.17)(lightningcss@1.32.0)
       lit:
         specifier: ^3.0.0
         version: 3.3.2
 
-  packages/cli: {}
+  packages/cli:
+    dependencies:
+      chokidar:
+        specifier: ^5.0.0
+        version: 5.0.0
 
   packages/core:
     dependencies:
@@ -251,8 +255,8 @@ importers:
         specifier: ^3.3.1
         version: 3.3.1
       '@litoho/router':
-        specifier: ^0.0.12
-        version: 0.0.12
+        specifier: ^0.1.2
+        version: 0.1.2
       hono:
         specifier: ^4.7.7
         version: 4.12.12
@@ -321,21 +325,21 @@ importers:
   playgrounds/demo-middleware:
     dependencies:
       '@litoho/app':
-        specifier: ^0.0.12
-        version: 0.0.12(@types/node@22.19.17)(lightningcss@1.32.0)
+        specifier: ^0.1.2
+        version: 0.1.2(@types/node@22.19.17)(lightningcss@1.32.0)
       '@litoho/core':
-        specifier: ^0.0.12
-        version: 0.0.12
+        specifier: ^0.1.2
+        version: 0.1.2
       '@litoho/server':
-        specifier: ^0.0.12
-        version: 0.0.12(@types/node@22.19.17)(lightningcss@1.32.0)
+        specifier: ^0.1.2
+        version: 0.1.2(@types/node@22.19.17)(lightningcss@1.32.0)
       lit:
         specifier: ^3.2.0
         version: 3.3.2
     devDependencies:
       litoho:
-        specifier: ^0.0.12
-        version: 0.0.12
+        specifier: ^0.1.2
+        version: 0.1.2
       tsx:
         specifier: ^4.19.2
         version: 4.21.0
@@ -705,20 +709,20 @@ packages:
   '@lit/reactive-element@2.1.2':
     resolution: {integrity: sha512-pbCDiVMnne1lYUIaYNN5wrwQXDtHaYtg7YEFPeW+hws6U47WeFvISGUWekPGKWOP1ygrs0ef0o1VJMk1exos5A==}
 
-  '@litoho/app@0.0.12':
-    resolution: {integrity: sha512-8V46+j5Yan30qFJxxP1hXX8iOAZgUtXRKUt5bEc2KsB7gHEX4WW06aDm6O4E61oPfTLN6TZaRq7PrhLlxm8lwA==}
+  '@litoho/app@0.1.2':
+    resolution: {integrity: sha512-a8/86HZWe62yblVsS3bP9YgVp7241dmhLOLrXLc5vHy31AqLx/XTU5pX6QssbWPvQqHke9V+JajMKj8gZsmDdw==}
 
-  '@litoho/core@0.0.12':
-    resolution: {integrity: sha512-7gJkXMN3OajzHgmKvYVRhyJT4KiKs+DZA380K2gsasX7pYxNFQPKY696zZTkNzpe/HmMxfqcTahp0gW9VS8Zgw==}
+  '@litoho/core@0.1.2':
+    resolution: {integrity: sha512-EfFfJkoiJ3cr8M41DSfpBOpWpxNGw4q58D+HgIAmX/KN036uGGMDtezyeqzPCn0TUYkJdw60FYOToF+4lDGNnA==}
 
-  '@litoho/router@0.0.12':
-    resolution: {integrity: sha512-r3V4MQOoSpNWemm2lq3jno7N1WAfJ0K/4WUBqPxMm1DGBteMXa5Yl85VMOe1h/AIDhsAd4n7cFi34AlGWORhAg==}
+  '@litoho/router@0.1.2':
+    resolution: {integrity: sha512-mGmydpQxNMFzBNzAswkRrwsxHOb2UlWCGWF7gJQdx7stww6LwyYeLBNKHckDgn1g0QN4ifhSnH+EfsDiev/9bQ==}
 
-  '@litoho/server@0.0.12':
-    resolution: {integrity: sha512-OJITjfWUo0b/nJ9Js5gxmnGfmC9SylUGWZ/VIHsBBK4q1ogVOUub2HCjIPy5Okw4ITd/+W985WPP5qKLMGQrFw==}
+  '@litoho/server@0.1.2':
+    resolution: {integrity: sha512-Mm94Kfvh+oispJB2wPQp+c82CHJCwT2u6rXmyM+AvPCPeKz9WVuW+QMoxgrR2r/3pH100sAPxYz5DaR17V5Rzg==}
 
-  '@litoho/ui@0.0.12':
-    resolution: {integrity: sha512-+vj8UeVag+HY+hFQS8yP7ZSr/Y0VnlYVK7ShD+j/WYnQ0wdmLlxKfRxBlwRFXQFn7/m6okGUPCLdtRIeaORzRg==}
+  '@litoho/ui@0.1.2':
+    resolution: {integrity: sha512-+PXt5+e7tLeuBAONRNGbs2gPIRfWeDN9CBhpXUrxsZBYzAjcN6WNsq93DVyne0GKVVvOYQWIBIbm+UiafhGKfA==}
 
   '@parse5/tools@0.3.0':
     resolution: {integrity: sha512-zxRyTHkqb7WQMV8kTNBKWb1BeOFUKXBXTBWuxg9H9hfvQB3IwP6Iw2U75Ia5eyRxPNltmY7E8YAlz6zWwUnjKg==}
@@ -950,6 +954,10 @@ packages:
   '@types/trusted-types@2.0.7':
     resolution: {integrity: sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw==}
 
+  chokidar@5.0.0:
+    resolution: {integrity: sha512-TQMmc3w+5AxjpL8iIiwebF73dRDF4fBIieAqGn9RGCWaEVwQ6Fb2cGe31Yns0RRIzii5goJ1Y7xbMwo1TxMplw==}
+    engines: {node: '>= 20.19.0'}
+
   data-uri-to-buffer@4.0.1:
     resolution: {integrity: sha512-0R9ikRb668HB7QDxT1vkpuUBtqc53YyAwMwGeUFKRojY/NWKvdZ+9UYtRfGmhqNbRkTSVpMbmyhXipFFv2cb/A==}
     engines: {node: '>= 12'}
@@ -1082,8 +1090,8 @@ packages:
   lit@3.3.2:
     resolution: {integrity: sha512-NF9zbsP79l4ao2SNrH3NkfmFgN/hBYSQo90saIVI1o5GpjAdCPVstVzO1MrLOakHoEhYkrtRjPK6Ob521aoYWQ==}
 
-  litoho@0.0.12:
-    resolution: {integrity: sha512-Idh9IF1ne2neepYaG9ZyhBc5xOyvbP1S6jX+taxgvAQ3JEnko8A2pjc5kdI4qcjKvIumyIXMRY1b+gFe9AvvMA==}
+  litoho@0.1.2:
+    resolution: {integrity: sha512-c1vhajksHRafPtukelB+wwY52iomc50z6qBUa0onQ1w6pGDKNYNn4IKeP6Yf0V7H98QToulJgrFDdxpr4dZbog==}
     hasBin: true
 
   magic-string@0.30.21:
@@ -1112,6 +1120,10 @@ packages:
   postcss@8.5.9:
     resolution: {integrity: sha512-7a70Nsot+EMX9fFU3064K/kdHWZqGVY+BADLyXc8Dfv+mTLLVl6JzJpPaCZ2kQL9gIJvKXSLMHhqdRRjwQeFtw==}
     engines: {node: ^10 || ^12 || >=14}
+
+  readdirp@5.0.0:
+    resolution: {integrity: sha512-9u/XQ1pvrQtYyMpZe7DXKv2p5CNvyVwzUB6uhLAnQwHMSgKMBR62lc7AHljaeteeHXn11XTAaLLUVZYVZyuRBQ==}
+    engines: {node: '>= 20.19.0'}
 
   resolve-pkg-maps@1.0.0:
     resolution: {integrity: sha512-seS2Tj26TBVOC2NIc2rOe2y2ZO7efxITtLZcGSOnHHNOQ7CkiUBfw0Iw2ck6xkIhPwLhKNLS8BO+hEpngQlqzw==}
@@ -1378,9 +1390,9 @@ snapshots:
     dependencies:
       '@lit-labs/ssr-dom-shim': 1.5.1
 
-  '@litoho/app@0.0.12(@types/node@22.19.17)(lightningcss@1.32.0)':
+  '@litoho/app@0.1.2(@types/node@22.19.17)(lightningcss@1.32.0)':
     dependencies:
-      '@litoho/server': 0.0.12(@types/node@22.19.17)(lightningcss@1.32.0)
+      '@litoho/server': 0.1.2(@types/node@22.19.17)(lightningcss@1.32.0)
       lit: 3.3.2
     transitivePeerDependencies:
       - '@types/node'
@@ -1392,17 +1404,17 @@ snapshots:
       - sugarss
       - terser
 
-  '@litoho/core@0.0.12':
+  '@litoho/core@0.1.2':
     dependencies:
       lit: 3.3.2
 
-  '@litoho/router@0.0.12': {}
+  '@litoho/router@0.1.2': {}
 
-  '@litoho/server@0.0.12(@types/node@22.19.17)(lightningcss@1.32.0)':
+  '@litoho/server@0.1.2(@types/node@22.19.17)(lightningcss@1.32.0)':
     dependencies:
       '@hono/node-server': 1.19.14(hono@4.12.12)
       '@lit-labs/ssr': 3.3.1
-      '@litoho/router': 0.0.12
+      '@litoho/router': 0.1.2
       hono: 4.12.12
       vite: 5.4.21(@types/node@22.19.17)(lightningcss@1.32.0)
     transitivePeerDependencies:
@@ -1415,7 +1427,7 @@ snapshots:
       - sugarss
       - terser
 
-  '@litoho/ui@0.0.12':
+  '@litoho/ui@0.1.2':
     dependencies:
       lit: 3.3.2
 
@@ -1576,6 +1588,10 @@ snapshots:
 
   '@types/trusted-types@2.0.7': {}
 
+  chokidar@5.0.0:
+    dependencies:
+      readdirp: 5.0.0
+
   data-uri-to-buffer@4.0.1: {}
 
   detect-libc@2.1.2: {}
@@ -1729,7 +1745,7 @@ snapshots:
       lit-element: 4.2.2
       lit-html: 3.3.2
 
-  litoho@0.0.12: {}
+  litoho@0.1.2: {}
 
   magic-string@0.30.21:
     dependencies:
@@ -1756,6 +1772,8 @@ snapshots:
       nanoid: 3.3.11
       picocolors: 1.1.1
       source-map-js: 1.2.1
+
+  readdirp@5.0.0: {}
 
   resolve-pkg-maps@1.0.0: {}
 

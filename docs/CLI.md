@@ -16,7 +16,7 @@ npm exec litoho -- --help
 คำสั่งระดับบนสุดที่มีตอนนี้:
 
 - `litoho new <name>`
-- `litoho dev [--root <dir>]`
+- `litoho dev [--hmr-port <port>] [--hmr-host <host>] [--hmr-protocol <ws|wss>] [--root <dir>]`
 - `litoho build [--root <dir>]`
 - `litoho start [--root <dir>]`
 - `litoho doctor [--root <dir>]`
@@ -40,14 +40,28 @@ npm exec litoho -- --help
 pnpm exec litoho new demo-app
 ```
 
-### `litoho dev [--root <dir>]`
+### `litoho dev [--hmr-port <port>] [--hmr-host <host>] [--hmr-protocol <ws|wss>] [--root <dir>]`
 
 generate route manifests แล้วรัน development server ผ่าน `tsx server.ts`
+
+flags:
+
+- `--hmr-port <port>` บังคับ HMR websocket port โดยตรง
+- `--hmr-host <host>` override host ของ HMR
+- `--hmr-protocol <ws|wss>` override protocol ของ HMR
+- `--root <dir>`
+
+หมายเหตุ:
+
+- ถ้าไม่ส่ง `--hmr-port` framework จะพยายามหา free port ใกล้กับ app port ให้อัตโนมัติ
+- dev watcher ใช้ `chokidar` เพื่อให้ behavior บน macOS นิ่งกว่า `fs.watch`
 
 ตัวอย่าง:
 
 ```bash
 pnpm exec litoho dev --root .
+pnpm exec litoho dev --hmr-port 3030
+pnpm exec litoho dev --hmr-host localhost --hmr-protocol ws
 ```
 
 ### `litoho build [--root <dir>]`

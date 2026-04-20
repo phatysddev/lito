@@ -1,9 +1,9 @@
 import { createServer as createNodeServer } from "node:http";
+import { createServer as createNetServer } from "node:net";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { getRequestListener } from "@hono/node-server";
-import type { Server as NodeHttpServer } from "node:http";
-import { createServer as createViteServer, type ViteDevServer } from "vite";
+import type { IncomingMessage, Server as NodeHttpServer, ServerResponse } from "node:http";
 import { createDevClientAssets, createManifestClientAssets } from "./client-assets.js";
 import {
   createLitoServer,
@@ -21,6 +21,9 @@ export type LitoNodeAppOptions = {
   mode?: "development" | "production";
   rootDir?: string;
   clientEntry?: string;
+  hmrPort?: number;
+  hmrHost?: string;
+  hmrProtocol?: "ws" | "wss";
   pages?: LitoPageRoute[];
   apiRoutes?: LitoApiRoute[];
   notFoundPage?: LitoNotFoundPage;
@@ -28,6 +31,11 @@ export type LitoNodeAppOptions = {
   middlewares?: readonly LitoMiddleware[];
   logger?: LitoLoggerHooks;
   env?: Record<string, string | undefined>;
+};
+
+type ViteDevServer = {
+  middlewares: (request: IncomingMessage, response: ServerResponse, next: (error?: Error) => void) => void;
+  close: () => Promise<void>;
 };
 
 export type LitoNodeApp = {
@@ -44,6 +52,11 @@ export async function startLitoNodeApp(options: LitoNodeAppOptions = {}): Promis
   const distRoot = resolve(rootDir, "dist");
   const publicRoot = resolve(rootDir, "public");
   const manifestPath = resolve(distRoot, "manifest.json");
+  const envHmrPort = toOptionalNumber(process.env.LITOHO_HMR_PORT);
+  const hmrPort = options.hmrPort ?? envHmrPort;
+  const hmrHost = options.hmrHost ?? process.env.LITOHO_HMR_HOST;
+  const hmrProtocol =
+    options.hmrProtocol ?? (process.env.LITOHO_HMR_PROTOCOL === "wss" ? "wss" : process.env.LITOHO_HMR_PROTOCOL === "ws" ? "ws" : undefined);
   let vite: ViteDevServer | undefined;
 
   const app = createLitoServer({
@@ -88,14 +101,11 @@ export async function startLitoNodeApp(options: LitoNodeAppOptions = {}): Promis
   });
 
   if (!isProduction) {
-    vite = await createViteServer({
-      appType: "custom",
-      root: rootDir,
-      server: {
-        middlewareMode: {
-          server: httpServer
-        }
-      }
+    vite = await createDevViteServer(rootDir, {
+      appPort: port,
+      hmrPort,
+      hmrHost,
+      hmrProtocol
     });
   }
 
@@ -129,4 +139,70 @@ export async function startLitoNodeApp(options: LitoNodeAppOptions = {}): Promis
     httpServer,
     vite
   };
+}
+
+async function createDevViteServer(
+  rootDir: string,
+  options: {
+    appPort: number;
+    hmrPort?: number;
+    hmrHost?: string;
+    hmrProtocol?: "ws" | "wss";
+  }
+): Promise<ViteDevServer> {
+  const { createServer } = await import("vite");
+  const hmrPort = await resolveHmrPort(options.appPort, options.hmrPort);
+
+  return createServer({
+    appType: "custom",
+    root: rootDir,
+    server: {
+      middlewareMode: true,
+      hmr: {
+        host: options.hmrHost,
+        protocol: options.hmrProtocol,
+        port: hmrPort,
+        clientPort: hmrPort
+      }
+    }
+  });
+}
+
+async function resolveHmrPort(appPort: number, configuredPort?: number) {
+  if (configuredPort) {
+    return configuredPort;
+  }
+
+  for (let candidate = appPort + 1; candidate <= appPort + 10; candidate += 1) {
+    if (await isPortAvailable(candidate)) {
+      return candidate;
+    }
+  }
+
+  return appPort + 1;
+}
+
+async function isPortAvailable(port: number) {
+  return new Promise<boolean>((resolveAvailability) => {
+    const probe = createNetServer();
+
+    probe.once("error", () => {
+      resolveAvailability(false);
+    });
+
+    probe.listen(port, () => {
+      probe.close(() => {
+        resolveAvailability(true);
+      });
+    });
+  });
+}
+
+function toOptionalNumber(value: string | undefined) {
+  if (!value) {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
 }

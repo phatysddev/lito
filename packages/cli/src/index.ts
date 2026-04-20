@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
+import chokidar from "chokidar";
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync, watch } from "node:fs";
-import { resolve } from "node:path";
+import { existsSync } from "node:fs";
+import { relative, resolve } from "node:path";
 import { formatDoctorReport, hasDoctorErrors, runLitoDoctor } from "./doctor.js";
 import { generateRouteManifests } from "./generate-route-manifests.js";
 import { expandUiSelection, UI_COMPONENT_REGISTRY, UI_PRESET_REGISTRY } from "./ui-registry.js";
@@ -64,7 +65,7 @@ async function main() {
       await handleAddCommand(restArgs);
       return;
     case "dev":
-      await runDevCommand(projectRoot);
+      await runDevCommand(projectRoot, restArgs);
       return;
     case "build":
       generateRouteManifests(projectRoot);
@@ -425,25 +426,36 @@ function runLocalCommand(cwd: string, binary: string, commandArgs: string[], env
   }
 }
 
-async function runDevCommand(cwd: string) {
+async function runDevCommand(cwd: string, commandArgs: string[]) {
+  const debug = process.env.LITOHO_DEV_DEBUG === "true";
+  const childEnv = createDevEnvironment(commandArgs);
   logManifestGeneration("initial");
   generateRouteManifests(cwd);
 
   const watchers = createManifestWatchers(cwd);
-  const child = spawn("pnpm", ["exec", "tsx", "watch", "server.ts"], {
+  const child = spawn("pnpm", ["exec", "tsx", "watch", ...createTsxWatchExcludes(), "server.ts"], {
     cwd,
-    env: process.env,
+    env: childEnv,
     stdio: "inherit"
   });
 
-  const cleanup = () => {
+  if (debug) {
+    console.log(`[litoho dev debug] spawned tsx watch pid=${child.pid ?? "unknown"} cwd=${cwd}`);
+  }
+
+  const cleanup = async () => {
     for (const stopWatching of watchers) {
-      stopWatching();
+      await stopWatching();
     }
   };
 
-  child.on("exit", (code, signal) => {
-    cleanup();
+  child.on("exit", async (code, signal) => {
+    if (debug) {
+      console.log(
+        `[litoho dev debug] tsx watch process exit pid=${child.pid ?? "unknown"} code=${code ?? "null"} signal=${signal ?? "null"}`
+      );
+    }
+    await cleanup();
 
     if (signal) {
       process.kill(process.pid, signal);
@@ -454,61 +466,168 @@ async function runDevCommand(cwd: string) {
   });
 
   for (const signal of ["SIGINT", "SIGTERM"] as const) {
-    process.on(signal, () => {
-      cleanup();
+    process.on(signal, async () => {
+      if (debug) {
+        console.log(`[litoho dev debug] received ${signal}, forwarding to tsx watch pid=${child.pid ?? "unknown"}`);
+      }
+      await cleanup();
       child.kill(signal);
     });
   }
+}
+
+function createDevEnvironment(commandArgs: string[]) {
+  const env = {
+    ...process.env
+  };
+  const hmrPort = readFlagValue(commandArgs, "--hmr-port");
+  const hmrHost = readFlagValue(commandArgs, "--hmr-host");
+  const hmrProtocol = readFlagValue(commandArgs, "--hmr-protocol");
+
+  if (hmrPort) {
+    env.LITOHO_HMR_PORT = hmrPort;
+  }
+
+  if (hmrHost) {
+    env.LITOHO_HMR_HOST = hmrHost;
+  }
+
+  if (hmrProtocol) {
+    if (hmrProtocol !== "ws" && hmrProtocol !== "wss") {
+      throw new Error(`Invalid --hmr-protocol value: ${hmrProtocol}. Expected "ws" or "wss".`);
+    }
+
+    env.LITOHO_HMR_PROTOCOL = hmrProtocol;
+  }
+
+  return env;
+}
+
+function createTsxWatchExcludes() {
+  const excludes = new Set([
+    "src/generated/**",
+    "**/src/generated/**",
+    "vite.config.ts.timestamp-*.mjs",
+    "**/vite.config.ts.timestamp-*.mjs"
+  ]);
+  const extraExcludes = process.env.LITOHO_DEV_EXCLUDE
+    ?.split(",")
+    .map((value) => value.trim())
+    .filter((value) => value !== "") ?? [];
+
+  for (const pattern of extraExcludes) {
+    excludes.add(pattern);
+  }
+
+  return [...excludes].flatMap((pattern) => ["--exclude", pattern]);
 }
 
 function createManifestWatchers(cwd: string) {
   const watchTargets = ["app/pages", "app/api"]
     .map((relativePath) => resolve(cwd, relativePath))
     .filter((path) => existsSync(path));
+
+  if (watchTargets.length === 0) {
+    return [];
+  }
+
   const debug = process.env.LITOHO_DEV_DEBUG === "true";
+  const pendingEvents = new Map<string, { target: string; eventType: string; filename: string; changedPath: string }>();
+  const recentEvents = new Map<string, number>();
+  let flushTimeout: NodeJS.Timeout | undefined;
 
-  return watchTargets.map((target) => {
-    let timeout: NodeJS.Timeout | undefined;
-    let lastFilename = "";
-    let lastEventType = "";
+  const flushPendingEvents = () => {
+    const manifestEvents = [...pendingEvents.values()];
+    pendingEvents.clear();
 
-    const watcher = watch(target, { recursive: true }, (eventType, filename) => {
-      lastFilename = typeof filename === "string" ? filename : "";
-      lastEventType = eventType;
+    if (manifestEvents.length === 0) {
+      return;
+    }
 
+    try {
+      logManifestGeneration("update", manifestEvents[0]?.target, {
+        eventType: manifestEvents[0]?.eventType,
+        filename: manifestEvents[0]?.filename,
+        eventCount: manifestEvents.length
+      });
+      generateRouteManifests(cwd);
+    } catch (error) {
+      console.error("[litoho dev] Failed to regenerate route manifests.");
+      console.error(error);
+    }
+  };
+
+  const watcher = chokidar.watch(watchTargets, {
+    ignoreInitial: true,
+    awaitWriteFinish: {
+      stabilityThreshold: 120,
+      pollInterval: 25
+    }
+  });
+
+  const handleWatchEvent = (eventType: string, changedPath: string) => {
+    const target = resolveWatchTarget(watchTargets, changedPath);
+    const normalizedFilename = target ? relative(target, changedPath).replace(/\\/g, "/") : "";
+    const dedupeKey = `${eventType}:${changedPath}`;
+    const now = Date.now();
+    const lastSeenAt = recentEvents.get(dedupeKey) ?? 0;
+
+    if (now - lastSeenAt < 160) {
       if (debug) {
-        const changedPath = lastFilename === "" ? target : resolve(target, lastFilename);
         console.log(
-          `[litoho dev debug] watch event=${eventType} target=${target} changed=${changedPath}`
+          `[litoho dev debug] coalesced duplicate watch event=${eventType} target=${target} changed=${changedPath}`
         );
       }
+      return;
+    }
 
-      if (timeout) {
-        clearTimeout(timeout);
+    recentEvents.set(dedupeKey, now);
+
+    for (const [key, timestamp] of recentEvents) {
+      if (now - timestamp > 1500) {
+        recentEvents.delete(key);
       }
+    }
 
-      timeout = setTimeout(() => {
-        try {
-          logManifestGeneration("update", target, {
-            eventType: lastEventType,
-            filename: lastFilename
-          });
-          generateRouteManifests(cwd);
-        } catch (error) {
-          console.error("[litoho dev] Failed to regenerate route manifests.");
-          console.error(error);
-        }
-      }, 80);
+    if (debug) {
+      console.log(
+        `[litoho dev debug] watch event=${eventType} target=${target ?? "(unknown)"} changed=${changedPath}`
+      );
+    }
+
+    pendingEvents.set(changedPath, {
+      target: target ?? changedPath,
+      eventType,
+      filename: normalizedFilename,
+      changedPath
     });
 
-    return () => {
-      if (timeout) {
-        clearTimeout(timeout);
-      }
+    if (flushTimeout) {
+      clearTimeout(flushTimeout);
+    }
 
-      watcher.close();
-    };
-  });
+    flushTimeout = setTimeout(flushPendingEvents, 180);
+  };
+
+  watcher.on("add", (changedPath) => handleWatchEvent("add", resolve(changedPath)));
+  watcher.on("change", (changedPath) => handleWatchEvent("change", resolve(changedPath)));
+  watcher.on("unlink", (changedPath) => handleWatchEvent("unlink", resolve(changedPath)));
+  watcher.on("addDir", (changedPath) => handleWatchEvent("addDir", resolve(changedPath)));
+  watcher.on("unlinkDir", (changedPath) => handleWatchEvent("unlinkDir", resolve(changedPath)));
+
+  return [async () => {
+    if (flushTimeout) {
+      clearTimeout(flushTimeout);
+      flushTimeout = undefined;
+    }
+
+    await watcher.close();
+  }];
+}
+
+function resolveWatchTarget(watchTargets: string[], changedPath: string) {
+  const sortedTargets = [...watchTargets].sort((left, right) => right.length - left.length);
+  return sortedTargets.find((target) => changedPath === target || changedPath.startsWith(`${target}/`) || changedPath.startsWith(`${target}\\`));
 }
 
 function logManifestGeneration(
@@ -517,6 +636,7 @@ function logManifestGeneration(
   details?: {
     eventType?: string;
     filename?: string;
+    eventCount?: number;
   }
 ) {
   const timestamp = new Date().toLocaleTimeString("en-US", {
@@ -537,8 +657,9 @@ function logManifestGeneration(
       : details?.eventType
         ? ` event=${details.eventType}`
         : "";
+  const batchSuffix = details?.eventCount && details.eventCount > 1 ? ` batch=${details.eventCount}` : "";
 
-  console.log(`[litoho dev ${timestamp}] regenerated route manifests from ${target}${detailSuffix}`);
+  console.log(`[litoho dev ${timestamp}] regenerated route manifests from ${target}${detailSuffix}${batchSuffix}`);
 }
 
 function printHelp() {
@@ -546,7 +667,7 @@ function printHelp() {
 
 Usage:
   litoho new <name>
-  litoho dev [--root <dir>]
+  litoho dev [--hmr-port <port>] [--hmr-host <host>] [--hmr-protocol <ws|wss>] [--root <dir>]
   litoho build [--root <dir>]
   litoho start [--root <dir>]
   litoho doctor [--root <dir>]

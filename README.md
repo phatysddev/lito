@@ -217,7 +217,7 @@ Main commands available in `0.1.2`:
 
 ```bash
 litoho new <name>
-litoho dev [--root <dir>]
+litoho dev [--hmr-port <port>] [--hmr-host <host>] [--hmr-protocol <ws|wss>] [--root <dir>]
 litoho build [--root <dir>]
 litoho start [--root <dir>]
 litoho doctor [--root <dir>]
