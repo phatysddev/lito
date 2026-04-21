@@ -11,6 +11,7 @@ import {
   createCsrfCookie,
   createCsrfToken,
   createLitoServer,
+  createMemoryRateLimitStore,
   createSecureCookieHeader,
   deleteCookie,
   defineApiRoute,
@@ -242,6 +243,103 @@ test("createLitoServer applies host allowlist to trusted forwarded hosts", async
     ok: false,
     error: "host_not_allowed"
   });
+});
+
+test("audit hooks receive manual and built-in security events", async () => {
+  const events = [];
+  const app = createLitoServer({
+    appName: "Litoho Test",
+    audit: {
+      onEvent: (event) => {
+        events.push(event);
+      }
+    },
+    middlewares: [
+      async (context, next) => {
+        await context.audit({
+          type: "app.custom",
+          severity: "info",
+          message: "Custom audit event",
+          metadata: {
+            marker: "manual"
+          }
+        });
+        return next();
+      },
+      requireAuth({
+        expectedToken: "secret",
+        protectedPathPrefixes: ["/api/audit-auth"]
+      }),
+      withRateLimit({
+        key: "audit-rate",
+        limit: 1,
+        protectedPathPrefixes: ["/api/audit-rate"],
+        windowMs: 60_000
+      })
+    ],
+    apiRoutes: [
+      {
+        id: "api:audit-auth",
+        path: "/api/audit-auth",
+        ...defineApiRoute({
+          get: () => json({ ok: true })
+        })
+      },
+      {
+        id: "api:audit-rate",
+        path: "/api/audit-rate",
+        ...defineApiRoute({
+          get: () => json({ ok: true })
+        })
+      }
+    ]
+  });
+
+  const deniedAuth = await app.fetch(new Request("http://litoho.test/api/audit-auth"));
+  await app.fetch(new Request("http://litoho.test/api/audit-rate"));
+  const deniedRate = await app.fetch(new Request("http://litoho.test/api/audit-rate"));
+
+  assert.equal(deniedAuth.status, 401);
+  assert.equal(deniedRate.status, 429);
+  assert.deepEqual(
+    events.map((event) => event.type),
+    ["app.custom", "security.auth.denied", "app.custom", "app.custom", "security.rate_limit.exceeded"]
+  );
+  assert.equal(events[0].pathname, "/api/audit-auth");
+  assert.equal(events[0].kind, "api");
+  assert.equal(events[0].severity, "info");
+  assert.equal(events[1].status, 401);
+  assert.equal(events[4].metadata.limit, 1);
+});
+
+test("audit hooks receive host allowlist events before routing", async () => {
+  const events = [];
+  const app = createLitoServer({
+    appName: "Litoho Test",
+    allowedHosts: ["app.example.com"],
+    audit: {
+      onEvent: (event) => {
+        events.push(event);
+      }
+    },
+    apiRoutes: [
+      {
+        id: "api:host-audit",
+        path: "/api/host-audit",
+        ...defineApiRoute({
+          get: () => json({ ok: true })
+        })
+      }
+    ]
+  });
+
+  const denied = await app.fetch(new Request("http://evil.example.com/api/host-audit"));
+
+  assert.equal(denied.status, 421);
+  assert.equal(events.length, 1);
+  assert.equal(events[0].type, "security.host.denied");
+  assert.equal(events[0].host, "evil.example.com");
+  assert.equal(events[0].pathname, "/api/host-audit");
 });
 
 test("createLitoServer renders custom 404 pages", async () => {
@@ -634,6 +732,88 @@ test("withRateLimit short-circuits requests after the configured limit", async (
       message: "Too Many Requests"
     }
   });
+});
+
+test("withRateLimit supports custom store adapters", async () => {
+  const calls = [];
+  const store = {
+    async increment(key, input) {
+      calls.push({ key, windowMs: input.windowMs });
+      return {
+        count: calls.length,
+        resetAt: input.now + input.windowMs
+      };
+    }
+  };
+  const app = createLitoServer({
+    appName: "Litoho Test",
+    middlewares: [
+      withRateLimit({
+        key: (context) => `tenant:${context.query.get("tenant") ?? "default"}`,
+        limit: 1,
+        store,
+        windowMs: 5_000
+      })
+    ],
+    apiRoutes: [
+      {
+        id: "api:adapter-rate",
+        path: "/api/adapter-rate",
+        ...defineApiRoute({
+          get: () => json({ ok: true })
+        })
+      }
+    ]
+  });
+
+  const first = await app.fetch(new Request("http://litoho.test/api/adapter-rate?tenant=acme"));
+  const second = await app.fetch(new Request("http://litoho.test/api/adapter-rate?tenant=acme"));
+
+  assert.equal(first.status, 200);
+  assert.equal(second.status, 429);
+  assert.deepEqual(calls, [
+    {
+      key: "tenant:acme",
+      windowMs: 5_000
+    },
+    {
+      key: "tenant:acme",
+      windowMs: 5_000
+    }
+  ]);
+});
+
+test("createMemoryRateLimitStore can be shared and reset", async () => {
+  const store = createMemoryRateLimitStore();
+  const app = createLitoServer({
+    appName: "Litoho Test",
+    middlewares: [
+      withRateLimit({
+        key: "shared-store",
+        limit: 1,
+        store,
+        windowMs: 60_000
+      })
+    ],
+    apiRoutes: [
+      {
+        id: "api:memory-store",
+        path: "/api/memory-store",
+        ...defineApiRoute({
+          get: () => json({ ok: true })
+        })
+      }
+    ]
+  });
+
+  const first = await app.fetch(new Request("http://litoho.test/api/memory-store"));
+  const denied = await app.fetch(new Request("http://litoho.test/api/memory-store"));
+  await store.reset?.("shared-store");
+  const allowedAfterReset = await app.fetch(new Request("http://litoho.test/api/memory-store"));
+
+  assert.equal(first.status, 200);
+  assert.equal(denied.status, 429);
+  assert.equal(allowedAfterReset.status, 200);
 });
 
 test("withRequestTimeout returns 408 and aborts the request signal", async () => {

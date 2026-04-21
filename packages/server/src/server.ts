@@ -34,6 +34,7 @@ export type LitoRequestContext = {
   timing: LitoRequestTiming;
   setLocal: <Value>(key: string, value: Value) => Value;
   getLocal: <Value>(key: string) => Value | undefined;
+  audit: (event: LitoAuditEventInput) => Promise<void>;
 };
 
 export type LitoApiContext<Params extends Record<string, string> = Record<string, string>> = Omit<
@@ -82,6 +83,32 @@ export type LitoLoggerHooks = {
   onRequestError?: (context: LitoMiddlewareContext & { error: unknown; status: number }) => void | Promise<void>;
 };
 
+export type LitoAuditSeverity = "debug" | "info" | "warning" | "error";
+
+export type LitoAuditEvent = {
+  type: string;
+  severity: LitoAuditSeverity;
+  at: number;
+  message?: string;
+  method?: string;
+  pathname?: string;
+  routeId?: string;
+  kind?: "page" | "api";
+  status?: number;
+  clientIp?: string;
+  host?: string;
+  metadata?: Record<string, unknown>;
+};
+
+export type LitoAuditEventInput = Omit<LitoAuditEvent, "at" | "severity"> & {
+  at?: number;
+  severity?: LitoAuditSeverity;
+};
+
+export type LitoAuditHooks = {
+  onEvent?: (event: LitoAuditEvent, context?: LitoMiddlewareContext) => void | Promise<void>;
+};
+
 export type LitoServerOptions = {
   appName?: string;
   clientAssets?: LitoClientAssets;
@@ -93,6 +120,7 @@ export type LitoServerOptions = {
   errorPage?: LitoErrorPage;
   middlewares?: readonly LitoMiddleware[];
   env?: LitoServerEnvironment;
+  audit?: LitoAuditHooks;
   logger?: LitoLoggerHooks;
   securityHeaders?: LitoSecurityHeadersOptions | false;
   trustedProxy?: LitoTrustedProxyConfig;
@@ -382,9 +410,26 @@ export type LitoRateLimitOptions = {
   windowMs?: number;
   key?: string | ((context: LitoMiddlewareContext) => string);
   protectedPathPrefixes?: string[];
+  store?: LitoRateLimitStore;
   status?: number;
   retryAfterHeader?: boolean;
   response?: Response | ((context: LitoMiddlewareContext & { retryAfterSeconds: number }) => Response | Promise<Response>);
+};
+
+export type LitoRateLimitRecord = {
+  count: number;
+  resetAt: number;
+};
+
+export type LitoRateLimitStore = {
+  increment: (
+    key: string,
+    input: {
+      now: number;
+      windowMs: number;
+    }
+  ) => LitoRateLimitRecord | Promise<LitoRateLimitRecord>;
+  reset?: (key: string) => void | Promise<void>;
 };
 
 export type LitoBodyLimitOptions = {
@@ -560,6 +605,16 @@ export function createAuthGuardMiddleware(options: LitoAuthGuardMiddlewareOption
 
     const isProtectedRoute = protectedPathPrefixes.some((prefix) => context.pathname.startsWith(prefix));
     if (isProtectedRoute && !isAuthenticated) {
+      await context.audit({
+        type: "security.auth.denied",
+        severity: "warning",
+        message: "Authentication guard rejected a protected request.",
+        status: 401,
+        metadata: {
+          attemptedSources
+        }
+      });
+
       if (options.unauthorizedResponse) {
         return typeof options.unauthorizedResponse === "function"
           ? await options.unauthorizedResponse(context)
@@ -669,6 +724,17 @@ export function requireRole(options: LitoRequireRoleOptions): LitoMiddleware {
     const hasRole = options.requiredRoles.some((role) => roles.has(role));
 
     if (!hasRole) {
+      await context.audit({
+        type: "security.role.denied",
+        severity: "warning",
+        message: "Role guard rejected a protected request.",
+        status: 403,
+        metadata: {
+          requiredRoles: options.requiredRoles,
+          roles: [...roles]
+        }
+      });
+
       if (options.forbiddenResponse) {
         return typeof options.forbiddenResponse === "function"
           ? await options.forbiddenResponse(context)
@@ -736,10 +802,39 @@ export function withCors(options: LitoCorsOptions = {}): LitoMiddleware {
   };
 }
 
-const rateLimitState = new Map<string, { count: number; resetAt: number }>();
+const defaultRateLimitStore = createMemoryRateLimitStore();
+
+export function createMemoryRateLimitStore(
+  state: Map<string, LitoRateLimitRecord> = new Map()
+): LitoRateLimitStore {
+  return {
+    increment(key, { now, windowMs }) {
+      const current = state.get(key);
+
+      if (!current || now >= current.resetAt) {
+        const next = {
+          count: 1,
+          resetAt: now + windowMs
+        };
+        state.set(key, next);
+        return next;
+      }
+
+      current.count += 1;
+      return {
+        count: current.count,
+        resetAt: current.resetAt
+      };
+    },
+    reset(key) {
+      state.delete(key);
+    }
+  };
+}
 
 export function withRateLimit(options: LitoRateLimitOptions = {}): LitoMiddleware {
   const limit = options.limit ?? 60;
+  const store = options.store ?? defaultRateLimitStore;
   const windowMs = options.windowMs ?? 60_000;
   const protectedPathPrefixes = options.protectedPathPrefixes ?? [];
   const status = options.status ?? 429;
@@ -760,18 +855,26 @@ export function withRateLimit(options: LitoRateLimitOptions = {}): LitoMiddlewar
           `${context.pathname}:${context.clientIp ?? context.getCookie("visitor") ?? "global"}`;
 
     const now = Date.now();
-    const current = rateLimitState.get(resolvedKey);
+    const current = await store.increment(resolvedKey, {
+      now,
+      windowMs
+    });
 
-    if (!current || now >= current.resetAt) {
-      rateLimitState.set(resolvedKey, {
-        count: 1,
-        resetAt: now + windowMs
-      });
-      return next();
-    }
-
-    if (current.count >= limit) {
+    if (current.count > limit) {
       const retryAfterSeconds = Math.max(1, Math.ceil((current.resetAt - now) / 1000));
+      await context.audit({
+        type: "security.rate_limit.exceeded",
+        severity: "warning",
+        message: "Rate limit exceeded.",
+        status,
+        metadata: {
+          key: resolvedKey,
+          count: current.count,
+          limit,
+          retryAfterSeconds,
+          resetAt: current.resetAt
+        }
+      });
 
       if (options.response) {
         const response =
@@ -807,7 +910,6 @@ export function withRateLimit(options: LitoRateLimitOptions = {}): LitoMiddlewar
       );
     }
 
-    current.count += 1;
     return next();
   };
 }
@@ -1212,6 +1314,17 @@ export function withCsrf(options: LitoCsrfOptions = {}): LitoMiddleware {
     });
 
     if (!cookieToken || !submittedToken || !constantTimeEqual(cookieToken, submittedToken)) {
+      await context.audit({
+        type: "security.csrf.denied",
+        severity: "warning",
+        message: "CSRF token validation failed.",
+        status: 403,
+        metadata: {
+          hasCookieToken: Boolean(cookieToken),
+          hasSubmittedToken: Boolean(submittedToken)
+        }
+      });
+
       if (options.response) {
         return typeof options.response === "function" ? await options.response(context) : options.response;
       }
@@ -1262,6 +1375,16 @@ export function withOriginCheck(options: LitoOriginCheckOptions = {}): LitoMiddl
     if (origin && isAllowedOrigin(origin, context, { allowSameOrigin, allowedOrigins })) {
       return next();
     }
+
+    await context.audit({
+      type: "security.origin.denied",
+      severity: "warning",
+      message: "Origin check rejected the request.",
+      status,
+      metadata: {
+        origin
+      }
+    });
 
     if (options.response) {
       return typeof options.response === "function"
@@ -1385,6 +1508,7 @@ export function createLitoServer(options: LitoServerOptions = {}) {
   const apiRoutes = options.apiRoutes ?? [];
   const middlewares = options.middlewares ?? [];
   const env = options.env ?? process.env;
+  const audit = options.audit;
   const logger = options.logger;
   const securityHeaderEntries = options.securityHeaders === false ? new Map<string, string>() : createSecurityHeaderEntries(options.securityHeaders);
   const trustedProxy = normalizeTrustedProxyConfig(options.trustedProxy);
@@ -1396,6 +1520,20 @@ export function createLitoServer(options: LitoServerOptions = {}) {
       const proxy = resolveTrustedProxyInfo(context.req.raw, url, trustedProxy);
 
       if (!isAllowedHost(proxy.host, context.req.raw, allowedHosts)) {
+        await emitAuditEvent(audit, {
+          type: "security.host.denied",
+          severity: "warning",
+          message: "Request host is outside the configured allowlist.",
+          method: context.req.raw.method,
+          pathname: url.pathname,
+          status: 421,
+          clientIp: proxy.clientIp,
+          host: proxy.host,
+          metadata: {
+            forwardedFor: proxy.forwardedFor,
+            trustedProxy: proxy.enabled
+          }
+        });
         const response = await createHostNotAllowedResponse(proxy.host, context.req.raw, allowedHosts);
         return applySecurityHeaders(response, securityHeaderEntries);
       }
@@ -1430,6 +1568,7 @@ export function createLitoServer(options: LitoServerOptions = {}) {
 
   registerApiRoutes(app, {
     appName,
+    audit,
     env,
     logger,
     middlewares,
@@ -1445,6 +1584,7 @@ export function createLitoServer(options: LitoServerOptions = {}) {
 
     return handlePageRequest({
       appName,
+      audit,
       clientAssets: options.clientAssets,
       env,
       errorPage: options.errorPage,
@@ -1461,6 +1601,7 @@ export function createLitoServer(options: LitoServerOptions = {}) {
   app.all("*", async (context) =>
     handlePageRequest({
       appName,
+      audit,
       clientAssets: options.clientAssets,
       env,
       errorPage: options.errorPage,
@@ -1798,6 +1939,7 @@ function registerApiRoutes(
   app: Hono,
   input: {
     appName: string;
+    audit?: LitoAuditHooks;
     env: LitoServerEnvironment;
     logger?: LitoLoggerHooks;
     middlewares: readonly LitoMiddleware[];
@@ -1832,6 +1974,7 @@ function registerApiRoutes(
 
       app.on(methodName.toUpperCase(), route.path, async (context) => {
         const requestContext = createRequestContext({
+          audit: input.audit,
           env: input.env,
           params: context.req.param(),
           pathname: new URL(context.req.raw.url).pathname,
@@ -1873,6 +2016,7 @@ function registerApiRoutes(
     if (!route.options) {
       app.options(route.path, async (context) => {
         const requestContext = createRequestContext({
+          audit: input.audit,
           env: input.env,
           params: context.req.param(),
           pathname: new URL(context.req.raw.url).pathname,
@@ -1915,6 +2059,7 @@ function registerApiRoutes(
 
 async function handlePageRequest(input: {
   appName: string;
+  audit?: LitoAuditHooks;
   clientAssets?: LitoClientAssets;
   env: LitoServerEnvironment;
   errorPage?: LitoErrorPage;
@@ -1938,6 +2083,7 @@ async function handlePageRequest(input: {
   const url = new URL(input.request.url);
   const resolvedRoute = resolveRoute([...input.pages], url.pathname);
   const requestContext = createRequestContext({
+    audit: input.audit,
     env: input.env,
     params: resolvedRoute?.match.params ?? {},
     pathname: resolvedRoute?.match.pathname ?? url.pathname,
@@ -2208,6 +2354,7 @@ async function renderErrorPage(input: {
 }
 
 function createRequestContext(input: {
+  audit?: LitoAuditHooks;
   env: LitoServerEnvironment;
   params: Record<string, string>;
   pathname: string;
@@ -2219,7 +2366,9 @@ function createRequestContext(input: {
   const proxy = resolveTrustedProxyInfo(input.request, url, input.trustedProxy);
   const cookies = parseCookies(input.request.headers.get("cookie"));
 
-  return {
+  let requestContext: LitoRequestContext;
+
+  requestContext = {
     request: input.request,
     pathname: input.pathname,
     params: input.params,
@@ -2231,18 +2380,21 @@ function createRequestContext(input: {
     host: proxy.host,
     proxy,
     cookies,
-    getCookie: (name) => cookies[name],
+    getCookie: (name: string) => cookies[name],
     locals,
     env: input.env,
     timing: {
       startedAt: Date.now()
     },
-    setLocal: (key, value) => {
+    setLocal: <Value>(key: string, value: Value) => {
       locals[key] = value;
       return value;
     },
-    getLocal: (key) => locals[key] as never
+    getLocal: <Value>(key: string) => locals[key] as Value | undefined,
+    audit: (event: LitoAuditEventInput): Promise<void> => emitAuditEvent(input.audit, event, requestContext)
   };
+
+  return requestContext;
 }
 
 async function runMiddlewares(input: {
@@ -2483,6 +2635,17 @@ async function createBodyLimitResponse(
     status: number;
   }
 ) {
+  await context.audit({
+    type: "security.body_limit.exceeded",
+    severity: "warning",
+    message: "Request body exceeded the configured limit.",
+    status: input.status,
+    metadata: {
+      limit: input.limit,
+      received: input.received
+    }
+  });
+
   if (input.options.response) {
     return typeof input.options.response === "function"
       ? await input.options.response({
@@ -2516,6 +2679,16 @@ async function createRequestTimeoutResponse(
     timeoutMs: number;
   }
 ) {
+  await context.audit({
+    type: "security.request.timeout.response",
+    severity: "warning",
+    message: "Request timeout response was generated.",
+    status: input.status,
+    metadata: {
+      timeoutMs: input.timeoutMs
+    }
+  });
+
   if (input.options.response) {
     return typeof input.options.response === "function"
       ? await input.options.response({
@@ -2550,6 +2723,18 @@ async function createJsonBodyErrorResponse(
     status: number;
   }
 ) {
+  await context.audit({
+    type: "security.json_body.rejected",
+    severity: "warning",
+    message: createJsonBodyErrorMessage(input.reason),
+    status: input.status,
+    metadata: {
+      reason: input.reason,
+      limit: input.limit,
+      received: input.received
+    }
+  });
+
   if (input.options.response) {
     return typeof input.options.response === "function"
       ? await input.options.response({
@@ -2905,6 +3090,37 @@ function createLoggerContext(context: LitoRequestContext, kind: "page" | "api", 
     kind,
     routeId
   };
+}
+
+async function emitAuditEvent(
+  audit: LitoAuditHooks | undefined,
+  event: LitoAuditEventInput,
+  context?: LitoMiddlewareContext | LitoRequestContext
+) {
+  if (!audit?.onEvent) {
+    return;
+  }
+
+  const auditEvent: LitoAuditEvent = {
+    type: event.type,
+    severity: event.severity ?? "info",
+    at: event.at ?? Date.now(),
+    message: event.message,
+    method: event.method ?? context?.request.method,
+    pathname: event.pathname ?? context?.pathname,
+    routeId: event.routeId ?? (context && "routeId" in context ? context.routeId : undefined),
+    kind: event.kind ?? (context && "kind" in context ? context.kind : undefined),
+    status: event.status,
+    clientIp: event.clientIp ?? context?.clientIp,
+    host: event.host ?? context?.host,
+    metadata: event.metadata
+  };
+
+  try {
+    await audit.onEvent(auditEvent, context && "kind" in context ? context : undefined);
+  } catch (error) {
+    console.error("[Litoho Audit Error]", error);
+  }
 }
 
 function finalizeRequestTiming(context: LitoRequestContext) {

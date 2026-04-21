@@ -1,4 +1,4 @@
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
 
 export type LitoDoctorFinding = {
@@ -80,6 +80,8 @@ export function runLitoDoctor(projectRoot: string): LitoDoctorFinding[] {
     });
   }
 
+  findings.push(...runSecurityDoctor(projectRoot));
+
   return findings;
 }
 
@@ -144,4 +146,109 @@ function suggestPageModulePath(projectRoot: string, filePath: string) {
 
 function toRelative(projectRoot: string, filePath: string) {
   return relative(projectRoot, filePath).replace(/\\/g, "/");
+}
+
+function runSecurityDoctor(projectRoot: string): LitoDoctorFinding[] {
+  const findings: LitoDoctorFinding[] = [];
+  const serverPath = resolve(projectRoot, "server.ts");
+  const apiMiddlewarePath = resolve(projectRoot, "app/api/_middleware.ts");
+  const securitySources = [
+    existsSync(serverPath) ? readTextFile(serverPath) : "",
+    existsSync(apiMiddlewarePath) ? readTextFile(apiMiddlewarePath) : ""
+  ].join("\n");
+
+  if (!existsSync(serverPath)) {
+    findings.push({
+      kind: "warning",
+      message: "Security doctor could not find `server.ts`. Production server hardening could not be checked."
+    });
+    return findings;
+  }
+
+  if (!containsAny(securitySources, ["allowedHosts"])) {
+    findings.push({
+      kind: "warning",
+      message: "Security: `allowedHosts` is not configured in `createLitoServer()`. Add a host allowlist in production to reduce Host header attacks."
+    });
+  }
+
+  if (!containsAny(securitySources, ["trustedProxy"])) {
+    findings.push({
+      kind: "info",
+      message: "Security: `trustedProxy` is not configured. This is safe by default; enable it only when the app is behind a trusted reverse proxy."
+    });
+  }
+
+  if (!containsAny(securitySources, ["withOriginCheck"])) {
+    findings.push({
+      kind: "warning",
+      message: "Security: `withOriginCheck()` is not detected. Add it before mutation handlers to reject unexpected cross-origin requests."
+    });
+  }
+
+  if (!containsAny(securitySources, ["withCsrf"])) {
+    findings.push({
+      kind: "warning",
+      message: "Security: `withCsrf()` is not detected. Browser form/session apps should enable CSRF protection."
+    });
+  }
+
+  if (!containsAny(securitySources, ["withRateLimit"])) {
+    findings.push({
+      kind: "warning",
+      message: "Security: `withRateLimit()` is not detected. Add rate limiting for login, API, and mutation routes."
+    });
+  }
+
+  if (!containsAny(securitySources, ["withRequestTimeout"])) {
+    findings.push({
+      kind: "warning",
+      message: "Security: `withRequestTimeout()` is not detected. Add request timeouts to reduce slow request/resource exhaustion risk."
+    });
+  }
+
+  if (!containsAny(securitySources, ["withBodyLimit"])) {
+    findings.push({
+      kind: "warning",
+      message: "Security: `withBodyLimit()` is not detected. Add body limits for mutation routes that accept request bodies."
+    });
+  }
+
+  if (!containsAny(securitySources, ["withJsonBody"])) {
+    findings.push({
+      kind: "info",
+      message: "Security: `withJsonBody()` is not detected. Use it for APIs that parse JSON bodies with content-type and size checks."
+    });
+  }
+
+  if (!containsAny(securitySources, ["withCsp", "contentSecurityPolicy", "securityHeaders"])) {
+    findings.push({
+      kind: "info",
+      message: "Security: custom CSP is not detected. Litoho sets baseline security headers, but production apps should add a route-appropriate CSP."
+    });
+  }
+
+  if (!containsAny(securitySources, ["audit:"])) {
+    findings.push({
+      kind: "info",
+      message: "Security: audit hooks are not configured. Add `audit.onEvent` to capture security-relevant events in production."
+    });
+  }
+
+  if (!findings.some((finding) => finding.message.startsWith("Security:") && finding.kind === "warning")) {
+    findings.push({
+      kind: "info",
+      message: "Security posture check found no high-priority missing server hardening."
+    });
+  }
+
+  return findings;
+}
+
+function readTextFile(filePath: string) {
+  return readFileSync(filePath, "utf8");
+}
+
+function containsAny(source: string, needles: string[]) {
+  return needles.some((needle) => source.includes(needle));
 }

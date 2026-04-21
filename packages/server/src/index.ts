@@ -2,7 +2,7 @@ export { createDevClientAssets, createManifestClientAssets } from "./client-asse
 export { startLitoNodeApp } from "./node-app.js";
 export { createLitoServer } from "./server.js";
 export { defineApiRoute } from "./server.js";
-export { createCspHeader, readJsonBody, readQuery } from "./server.js";
+export { createCspHeader, createMemoryRateLimitStore, readJsonBody, readQuery } from "./server.js";
 export {
   appendCookie,
   badRequest,
@@ -47,6 +47,10 @@ export type {
   LitoApiHandlerContext,
   LitoApiRouteDefinition,
   LitoApiRoute,
+  LitoAuditEvent,
+  LitoAuditEventInput,
+  LitoAuditHooks,
+  LitoAuditSeverity,
   LitoAllowedHost,
   LitoAllowedOrigin,
   LitoErrorPage,
@@ -75,7 +79,9 @@ export type {
   LitoNotFoundPage,
   LitoOriginCheckOptions,
   LitoPageRoute,
+  LitoRateLimitRecord,
   LitoRateLimitOptions,
+  LitoRateLimitStore,
   LitoRequireAuthOptions,
   LitoRequireRoleOptions,
   LitoRequestMetaMiddlewareOptions,

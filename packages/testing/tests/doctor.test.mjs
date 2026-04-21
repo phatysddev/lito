@@ -22,3 +22,57 @@ test("runLitoDoctor reports legacy page filenames and missing conventions", () =
     project.cleanup();
   }
 });
+
+test("runLitoDoctor reports missing production security hardening", () => {
+  const project = createTempLitoProject({
+    "app/pages/_index.ts": "export function render() { return 'home'; }\n",
+    "app/pages/_not-found.ts": "export function render() { return 'missing'; }\n",
+    "app/pages/_error.ts": "export function render() { return 'error'; }\n",
+    "app/api/health.ts": "export function get() { return Response.json({ ok: true }); }\n",
+    "server.ts": "import { createLitoServer } from '@litoho/server';\nexport default createLitoServer({});\n"
+  });
+
+  try {
+    const report = formatDoctorReport(runLitoDoctor(project.rootDir));
+
+    assert.match(report, /Security: `allowedHosts` is not configured/);
+    assert.match(report, /Security: `withOriginCheck\(\)` is not detected/);
+    assert.match(report, /Security: `withCsrf\(\)` is not detected/);
+    assert.match(report, /Security: `withRateLimit\(\)` is not detected/);
+    assert.match(report, /Security: audit hooks are not configured/);
+  } finally {
+    project.cleanup();
+  }
+});
+
+test("runLitoDoctor recognizes a hardened server security posture", () => {
+  const project = createTempLitoProject({
+    "app/pages/_index.ts": "export function render() { return 'home'; }\n",
+    "app/pages/_not-found.ts": "export function render() { return 'missing'; }\n",
+    "app/pages/_error.ts": "export function render() { return 'error'; }\n",
+    "app/api/_middleware.ts": `
+import { composeMiddlewares, withBodyLimit, withCsrf, withJsonBody, withOriginCheck, withRateLimit, withRequestTimeout } from "@litoho/server";
+export default composeMiddlewares(withRequestTimeout(), withRateLimit(), withBodyLimit(), withJsonBody(), withOriginCheck(), withCsrf());
+`,
+    "server.ts": `
+import { createLitoServer, withCsp } from "@litoho/server";
+export default createLitoServer({
+  allowedHosts: ["app.example.com"],
+  trustedProxy: { hops: 1 },
+  audit: { onEvent(event) { console.log(event.type); } },
+  middlewares: [withCsp()]
+});
+`
+  });
+
+  try {
+    const report = formatDoctorReport(runLitoDoctor(project.rootDir));
+
+    assert.match(report, /Security posture check found no high-priority missing server hardening/);
+    assert.doesNotMatch(report, /Security: `allowedHosts` is not configured/);
+    assert.doesNotMatch(report, /Security: `withOriginCheck\(\)` is not detected/);
+    assert.doesNotMatch(report, /Security: `withRateLimit\(\)` is not detected/);
+  } finally {
+    project.cleanup();
+  }
+});
