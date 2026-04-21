@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-20T13:04:13.525Z",
+  "generatedAt": "2026-04-21T12:03:03.914Z",
   "steps": {
     "preflight": {
       "status": "passed",
@@ -129,32 +129,31 @@
           }
         ]
       },
-      "updatedAt": "2026-04-20T13:02:12.924Z"
+      "updatedAt": "2026-04-21T12:03:02.081Z"
     },
     "smoke": {
-      "status": "failed",
-      "mode": "published",
+      "status": "passed",
+      "mode": "local",
       "scope": "@litoho",
       "cliPackageName": "litoho",
       "packageManager": "npm",
       "appName": "demo-app",
-      "install": true,
-      "build": true,
-      "start": true,
-      "generatedFilesVerified": false,
-      "versionSyncVerified": false,
-      "routeManifestVerified": false,
+      "install": false,
+      "build": false,
+      "start": false,
+      "generatedFilesVerified": true,
+      "versionSyncVerified": true,
+      "routeManifestVerified": true,
       "startProbeVerified": false,
-      "expectedVersion": "^0.1.1",
-      "updatedAt": "2026-04-20T13:04:13.519Z",
+      "expectedVersion": "^0.1.2",
+      "updatedAt": "2026-04-21T12:03:02.213Z",
       "error": "Command failed: npx -y litoho@0.1.2 new demo-app",
       "publishedRetryCount": 12,
-      "publishedRetryDelayMs": 10000,
-      "cliVersion": "0.1.2"
+      "publishedRetryDelayMs": 10000
     },
     "verify": {
-      "status": "failed",
-      "published": true,
+      "status": "passed",
+      "published": false,
       "skipTest": false,
       "steps": [
         {
@@ -169,27 +168,25 @@
         },
         {
           "name": "smoke",
-          "status": "failed",
+          "status": "passed",
           "command": "node",
           "args": [
             "scripts/smoke-new-app.mjs",
-            "--published",
-            "--install",
-            "--build",
-            "--start",
-            "--scope",
-            "@litoho",
-            "--cli-package",
-            "litoho",
-            "--cli-version",
-            "0.1.2",
             "--report",
             "/Users/yodsaveesupachoktanasap/Desktop/lito/release-report.json"
+          ]
+        },
+        {
+          "name": "test",
+          "status": "passed",
+          "command": "pnpm",
+          "args": [
+            "test"
           ]
         }
       ],
       "error": "Command failed: node scripts/smoke-new-app.mjs --published --install --build --start --scope @litoho --cli-package litoho --cli-version 0.1.2 --report /Users/yodsaveesupachoktanasap/Desktop/lito/release-report.json",
-      "updatedAt": "2026-04-20T13:04:13.525Z"
+      "updatedAt": "2026-04-21T12:03:03.913Z"
     },
     "publish": {
       "status": "failed",
