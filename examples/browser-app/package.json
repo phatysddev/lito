@@ -9,13 +9,13 @@
     "start": "npm exec litoho -- start --root ."
   },
   "dependencies": {
-    "@litoho/app": "^0.1.2",
-    "@litoho/core": "^0.1.2",
-    "@litoho/server": "^0.1.2",
+    "@litoho/app": "^0.1.3",
+    "@litoho/core": "^0.1.3",
+    "@litoho/server": "^0.1.3",
     "lit": "^3.2.0"
   },
   "devDependencies": {
-    "litoho": "^0.1.2",
+    "litoho": "^0.1.3",
     "tsx": "^4.19.2",
     "typescript": "^5.8.3",
     "vite": "^5.4.19"

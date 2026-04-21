@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-21T12:03:03.914Z",
+  "generatedAt": "2026-04-21T12:04:21.593Z",
   "steps": {
     "preflight": {
       "status": "passed",
@@ -129,7 +129,7 @@
           }
         ]
       },
-      "updatedAt": "2026-04-21T12:03:02.081Z"
+      "updatedAt": "2026-04-21T12:04:19.908Z"
     },
     "smoke": {
       "status": "passed",
@@ -146,7 +146,7 @@
       "routeManifestVerified": true,
       "startProbeVerified": false,
       "expectedVersion": "^0.1.2",
-      "updatedAt": "2026-04-21T12:03:02.213Z",
+      "updatedAt": "2026-04-21T12:04:20.170Z",
       "error": "Command failed: npx -y litoho@0.1.2 new demo-app",
       "publishedRetryCount": 12,
       "publishedRetryDelayMs": 10000
@@ -186,7 +186,7 @@
         }
       ],
       "error": "Command failed: node scripts/smoke-new-app.mjs --published --install --build --start --scope @litoho --cli-package litoho --cli-version 0.1.2 --report /Users/yodsaveesupachoktanasap/Desktop/lito/release-report.json",
-      "updatedAt": "2026-04-21T12:03:03.913Z"
+      "updatedAt": "2026-04-21T12:04:21.592Z"
     },
     "publish": {
       "status": "failed",
