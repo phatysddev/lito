@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-21T12:04:21.593Z",
+  "generatedAt": "2026-04-21T12:05:18.519Z",
   "steps": {
     "preflight": {
       "status": "passed",
@@ -189,11 +189,11 @@
       "updatedAt": "2026-04-21T12:04:21.592Z"
     },
     "publish": {
-      "status": "failed",
-      "releaseVersion": "0.0.12",
-      "autoBump": false,
-      "autoGit": false,
-      "dryRun": true,
+      "status": "passed",
+      "releaseVersion": "0.1.3",
+      "autoBump": true,
+      "autoGit": true,
+      "dryRun": false,
       "skipVerify": false,
       "verifyPublished": false,
       "bumpTarget": "patch",
@@ -204,13 +204,42 @@
         {
           "name": "@litoho/router",
           "dir": "packages/router",
-          "status": "failed",
-          "dryRun": true,
-          "error": "Command failed: npm publish --cache /tmp/litoho-npm-cache --access public --dry-run"
+          "status": "published",
+          "dryRun": false
+        },
+        {
+          "name": "@litoho/core",
+          "dir": "packages/core",
+          "status": "published",
+          "dryRun": false
+        },
+        {
+          "name": "@litoho/ui",
+          "dir": "packages/ui",
+          "status": "published",
+          "dryRun": false
+        },
+        {
+          "name": "@litoho/server",
+          "dir": "packages/server",
+          "status": "published",
+          "dryRun": false
+        },
+        {
+          "name": "@litoho/app",
+          "dir": "packages/app",
+          "status": "published",
+          "dryRun": false
+        },
+        {
+          "name": "litoho",
+          "dir": "packages/cli",
+          "status": "published",
+          "dryRun": false
         }
       ],
-      "updatedAt": "2026-04-20T12:54:34.313Z"
+      "updatedAt": "2026-04-21T12:05:18.519Z"
     }
   },
-  "status": "failed"
+  "status": "passed"
 }
