@@ -220,10 +220,11 @@ function mergeDocuments(documents: Array<LitoDocumentDefinition | undefined>): L
         title: document.title ?? accumulator.title,
         lang: document.lang ?? accumulator.lang,
         meta: [...(accumulator.meta ?? []), ...(document.meta ?? [])],
+        links: [...(accumulator.links ?? []), ...(document.links ?? [])],
         styles: [...(accumulator.styles ?? []), ...(document.styles ?? [])]
       };
     },
-    { meta: [], styles: [] }
+    { meta: [], links: [], styles: [] }
   );
 }
 

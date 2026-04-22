@@ -136,7 +136,10 @@ export class LuiSelect extends LitElement {
   }
 
   private getChoices(): LuiSelectChoice[] {
-    return [...this.querySelectorAll("lui-select-option")].map((option) => ({
+    const querySelectorAll = this.querySelectorAll?.bind(this);
+    const options = querySelectorAll ? Array.from(querySelectorAll("lui-select-option")) : [];
+
+    return options.map((option) => ({
       value: option.getAttribute("value") ?? "",
       label: option.textContent?.trim() ?? "",
       disabled: option.hasAttribute("disabled")
